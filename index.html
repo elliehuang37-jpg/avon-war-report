@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台灣雅芳 即時戰報</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>document.write('<script src="war_data.js?v=' + Date.now() + '"><\/script>');</script>
+<style>
+:root {
+  --rose:    #C8185A;
+  --wine:    #7A1040;
+  --gold:    #B5882A;
+  --gold-lt: #D4A84B;
+  --warm:    #F5F0EC;
+  --cream1:  #FAF8F5;
+  --cream2:  #F5F3F0;
+  --border1: #E0D8D0;
+  --border2: #EAE6E0;
+  --text1:   #2C2C2A;
+  --text2:   #5C5A56;
+  --text3:   #888070;
+  --green-d: #1A7A58; --green-l: #EDF7F2; --green-b: #C3E8D8;
+  --amber-d: #9A6800; --amber-l: #FFFAEE; --amber-b: #F0D090;
+  --brick-d: #B02020; --brick-l: #FEF4F4; --brick-b: #F0B0B0;
+  --blue-d:  #1A4A7A; --blue-l:  #EEF4FB; --blue-b:  #B0CCE8;
+  --div-A: #C8185A; --div-B: #1A4A7A; --div-C: #1A7A58;
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--warm);
+  color: var(--text1);
+  min-height: 100vh;
+}
+
+/* ── COVER / HEADER ─────────────────────────────────── */
+.cover {
+  position: relative;
+  background: var(--warm);
+  padding: 0;
+  overflow: hidden;
+}
+.cover-top-bar {
+  height: 5px;
+  background: linear-gradient(90deg, var(--rose) 0%, var(--wine) 40%, var(--gold) 100%);
+}
+.cover-body {
+  display: flex;
+  align-items: stretch;
+  min-height: 110px;
+  padding: 20px 32px 0 32px;
+}
+.cover-deco {
+  position: absolute;
+  top: 0; right: 0;
+  width: 320px; height: 100%;
+  background: linear-gradient(135deg, rgba(181,136,42,0.18) 0%, rgba(200,24,90,0.08) 100%);
+  border-left: 1px solid rgba(181,136,42,0.15);
+  pointer-events: none;
+}
+.cover-left { flex: 1; position: relative; z-index:1; }
+.brand-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.brand-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--rose);
+  line-height: 1;
+}
+.brand-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--wine);
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+.cover-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text2);
+  line-height: 1.8;
+  position: relative; z-index:1;
+}
+.cover-right .label { color: var(--gold); font-size: 0.62rem; letter-spacing:0.1em; }
+.cover-divider {
+  height: 1px;
+  margin: 14px 32px 0 32px;
+  background: linear-gradient(90deg, var(--gold) 0%, rgba(181,136,42,0.3) 60%, transparent 100%);
+}
+.cover-bottom-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--wine) 0%, var(--rose) 50%, var(--gold) 100%);
+  margin-top: 14px;
+}
+
+/* ── TABS ────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  background: var(--cream1);
+  border-bottom: 2px solid var(--border1);
+  padding: 0 24px;
+  overflow-x: auto;
+  gap: 2px;
+}
+.tab-btn {
+  padding: 13px 22px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+.tab-btn:hover { color: var(--rose); background: rgba(200,24,90,0.04); }
+.tab-btn.active { color: var(--rose); border-bottom-color: var(--rose); font-weight: 600; }
+
+/* ── LAYOUT ──────────────────────────────────────────── */
+.tab-pane { display:none; padding: 24px 28px; }
+.tab-pane.active { display:block; }
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--wine);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::before {
+  content: '';
+  display: block;
+  width: 3px; height: 18px;
+  background: linear-gradient(180deg, var(--rose), var(--gold));
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.sep { height:1px; background: linear-gradient(90deg, var(--border1), transparent); margin: 20px 0; }
+
+/* ── KPI CARDS ───────────────────────────────────────── */
+.kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 20px; }
+.kpi-card {
+  background: var(--cream1);
+  border: 1px solid var(--border1);
+  border-radius: 10px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 10px 10px 0 0;
+}
+.kpi-rose::after  { background: linear-gradient(90deg, var(--rose), var(--wine)); }
+.kpi-blue::after  { background: linear-gradient(90deg, var(--blue-d), #3388CC); }
+.kpi-green::after { background: linear-gradient(90deg, var(--green-d), #44AA88); }
+.kpi-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.kpi-value { font-size: 1.7rem; font-weight: 700; color: var(--text1); line-height:1.1; }
+.kpi-sub   { font-size: 0.8rem; color: var(--text2); margin-top: 4px; }
+.kpi-pct   { font-size: 1rem; font-weight: 700; margin-top: 8px; }
+.kpi-pct.ok   { color: var(--green-d); }
+.kpi-pct.warn { color: var(--amber-d); }
+.kpi-pct.bad  { color: var(--brick-d); }
+.kpi-gap   { font-size: 0.78rem; color: var(--brick-d); margin-top: 3px; }
+
+.prog { height: 6px; background: var(--border2); border-radius: 10px; margin-top: 10px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:10px; }
+.prog-rose  { background: linear-gradient(90deg, var(--rose), var(--gold-lt)); }
+.prog-blue  { background: linear-gradient(90deg, var(--blue-d), #4499EE); }
+.prog-green { background: linear-gradient(90deg, var(--green-d), #44BB88); }
+
+/* ── ALERT ROW ───────────────────────────────────────── */
+.alert-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.alert-box {
+  border-radius: 9px; padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.alert-box.good   { background: var(--green-l); border: 1px solid var(--green-b); }
+.alert-box.warn   { background: var(--amber-l); border: 1px solid var(--amber-b); }
+.alert-box.bad    { background: var(--brick-l); border: 1px solid var(--brick-b); }
+.alert-box.info   { background: var(--blue-l);  border: 1px solid var(--blue-b); }
+.alert-icon { font-size: 1.3rem; line-height:1; margin-top:2px; }
+.alert-label { font-size: 0.72rem; color: var(--text3); margin-bottom:2px; font-family:'DM Mono',monospace; letter-spacing:.05em; }
+.alert-val   { font-size: 1.2rem; font-weight: 700; }
+.alert-box.good .alert-val { color: var(--green-d); }
+.alert-box.warn .alert-val { color: var(--amber-d); }
+.alert-box.bad  .alert-val { color: var(--brick-d); }
+.alert-box.info .alert-val { color: var(--blue-d); }
+.alert-detail { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+
+/* ── CHART CARDS ─────────────────────────────────────── */
+.chart-row  { display: grid; gap: 16px; margin-bottom: 16px; }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-1 { grid-template-columns: 1fr; }
+.chart-card {
+  background: var(--cream1);
+  border: 1px solid var(--border1);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.chart-card h3 {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border2);
+}
+.chart-wrap { position:relative; height:260px; }
+.chart-wrap.tall { height:320px; }
+
+/* ── BDM CARDS ───────────────────────────────────────── */
+.bdm-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom:20px; }
+.bdm-card {
+  background: var(--cream1);
+  border: 1px solid var(--border1);
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+}
+.bdm-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  border-radius:10px 10px 0 0;
+}
+.bdm-A::after { background: linear-gradient(90deg, var(--div-A), var(--wine)); }
+.bdm-B::after { background: linear-gradient(90deg, var(--div-B), #3388CC); }
+.bdm-C::after { background: linear-gradient(90deg, var(--div-C), #44AA88); }
+.bdm-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:50%;
+  font-weight:700; font-size:0.8rem; color:#fff;
+  margin-bottom:6px;
+}
+.bdm-A .bdm-badge { background: var(--div-A); }
+.bdm-B .bdm-badge { background: var(--div-B); }
+.bdm-C .bdm-badge { background: var(--div-C); }
+.bdm-name { font-weight:700; font-size:1rem; color:var(--text1); margin-bottom:10px; }
+.bdm-row  { display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; padding:2px 0; }
+.bdm-row .lbl { color:var(--text3); }
+.bdm-row .val { font-weight:600; color:var(--text1); font-family:'DM Mono',monospace; font-size:0.78rem; }
+.bdm-row .pct-ok   { color:var(--green-d); font-weight:700; }
+.bdm-row .pct-warn { color:var(--amber-d); font-weight:700; }
+.bdm-row .pct-bad  { color:var(--brick-d); font-weight:700; }
+
+/* ── FILTER BAR ──────────────────────────────────────── */
+.filter-bar { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.fb-btn {
+  padding:5px 14px; border-radius:20px;
+  border:1px solid var(--border1);
+  background:var(--cream2); color:var(--text2);
+  cursor:pointer; font-size:0.82rem;
+  font-family:'Noto Sans TC',sans-serif;
+  transition:all 0.18s;
+}
+.fb-btn:hover { border-color:var(--rose); color:var(--rose); }
+.fb-btn.active { background:var(--rose); border-color:var(--rose); color:#fff; }
+.search-box {
+  padding:5px 14px; border-radius:20px;
+  border:1px solid var(--border1);
+  background:#fff; color:var(--text1);
+  font-size:0.82rem; font-family:'Noto Sans TC',sans-serif;
+  outline:none; width:180px;
+}
+.search-box:focus { border-color:var(--rose); }
+.count-badge { font-size:0.8rem; color:var(--text3); margin-left:4px; }
+
+/* ── TABLE ───────────────────────────────────────────── */
+.tbl-wrap { overflow-x:auto; }
+.tbl-wrap.max-h { max-height:460px; overflow-y:auto; }
+table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+thead th {
+  background:var(--wine);
+  color:#FAF8F5;
+  padding: 9px 12px;
+  text-align:left;
+  font-weight:600;
+  white-space:nowrap;
+  position:sticky; top:0; z-index:2;
+  font-size:0.78rem;
+  letter-spacing:0.03em;
+}
+tbody tr { border-bottom:1px solid var(--border2); }
+tbody tr:nth-child(odd)  { background:var(--cream1); }
+tbody tr:nth-child(even) { background:var(--cream2); }
+tbody tr:hover { background: rgba(200,24,90,0.05); }
+tbody td { padding:8px 12px; color:var(--text1); white-space:nowrap; }
+
+.tag {
+  display:inline-block; padding:2px 8px; border-radius:10px;
+  font-size:0.72rem; font-weight:600;
+}
+.tag-A { background:rgba(200,24,90,0.12); color:var(--rose); }
+.tag-B { background:rgba(26,74,122,0.12); color:var(--blue-d); }
+.tag-C { background:rgba(26,122,88,0.12); color:var(--green-d); }
+.status-tag {
+  display:inline-block; padding:2px 8px; border-radius:6px;
+  font-size:0.72rem; font-weight:600;
+}
+.st-over { background:var(--green-l); color:var(--green-d); }
+.st-sprint{ background:var(--blue-l);  color:var(--blue-d); }
+.st-chase { background:var(--amber-l); color:var(--amber-d); }
+.st-warn  { background:rgba(255,140,0,0.12); color:#8A5000; }
+.st-bad   { background:var(--brick-l); color:var(--brick-d); }
+.pct-ok   { color:var(--green-d); font-weight:700; }
+.pct-warn { color:var(--amber-d); font-weight:700; }
+.pct-bad  { color:var(--brick-d); font-weight:700; }
+
+/* ── TODAY HIGHLIGHT ─────────────────────────────────── */
+tr.today-row { background: rgba(200,24,90,0.07) !important; }
+tr.today-row td { font-weight:600; }
+
+/* ── 智慧洞察 TAB ─────────────────────────────────── */
+.ins-header-bar {
+  background: var(--cream1);
+  border: 1px solid var(--border1);
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex; flex-wrap: wrap; gap: 10px 0;
+  align-items: center;
+  font-size: 0.85rem; color: var(--text2);
+  margin-bottom: 6px;
+}
+.ins-pipe { color: var(--border1); margin: 0 10px; }
+.c-green { color: var(--green-d); }
+.c-red   { color: var(--brick-d); }
+
+.ins-scenario-row {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 22px;
+}
+.sc-card {
+  border-radius: 10px; padding: 20px 22px;
+  border: 1px solid var(--border1);
+}
+.sc-card.sc-opt  { background: var(--green-l); border-color: var(--green-b); }
+.sc-card.sc-base { background: var(--amber-l); border-color: var(--amber-b); }
+.sc-card.sc-cons { background: var(--brick-l); border-color: var(--brick-b); }
+.sc-label { font-size: 0.78rem; font-weight: 600; color: var(--text2); margin-bottom: 8px; font-family:'DM Mono',monospace; letter-spacing:.04em; }
+.sc-val   { font-family:'Cormorant Garamond',serif; font-size: 2rem; font-weight: 700; color: var(--text1); line-height:1; }
+.sc-pct   { font-size: 1.1rem; font-weight: 700; margin: 4px 0; }
+.sc-desc  { font-size: 0.78rem; color: var(--text3); margin-top: 4px; }
+
+.ins-obs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;
+}
+.obs-card {
+  border-radius: 10px; padding: 18px 20px;
+  border: 1px solid var(--border2);
+}
+.obs-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; }
+.obs-body  { font-size: 0.84rem; color: var(--text2); line-height: 1.7; }
+.obs-body strong { color: var(--text1); }
+
+.ins-action-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.act-row {
+  display: grid; grid-template-columns: 70px 70px 1fr 1fr;
+  gap: 12px; align-items: center;
+  border-radius: 9px; padding: 12px 16px;
+  border: 1px solid var(--border2);
+  font-size: 0.83rem;
+}
+.act-date { font-family:'DM Mono',monospace; font-weight:600; color:var(--text1); font-size:0.8rem; }
+.act-tag  { display:inline-block; padding:2px 10px; border-radius:10px; font-size:0.72rem; font-weight:700; }
+.act-obs  { color: var(--text2); }
+.act-rec  { color: var(--text1); font-weight: 500; }
+
+@media(max-width:768px){
+  .kpi-row,.bdm-grid,.alert-row { grid-template-columns:1fr; }
+  .cols-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-top-bar"></div>
+  <div class="cover-deco"></div>
+  <div class="cover-body">
+    <div class="cover-left">
+      <div class="brand-tag">Taiwan Region · Direct Sales</div>
+      <div class="brand-logo">AVON</div>
+      <div class="brand-sub">即時業務戰報 Real-Time Sales Report</div>
+    </div>
+    <div class="cover-right">
+      <span class="label">資料時間</span>
+      <span id="hdrTime">—</span>
+      <span class="label" style="margin-top:6px">來源檔案</span>
+      <span id="hdrFile" style="max-width:240px;overflow:hidden;text-overflow:ellipsis">—</span>
+    </div>
+  </div>
+  <div class="cover-divider"></div>
+  <div class="cover-bottom-bar"></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('overview',this)">📊 總覽戰報</button>
+  <button class="tab-btn" onclick="switchTab('bdm',this)">👥 BDM 分析</button>
+  <button class="tab-btn" onclick="switchTab('daily',this)">📅 每日進度</button>
+  <button class="tab-btn" onclick="switchTab('ranking',this)">🏆 SL 排行</button>
+  <button class="tab-btn" onclick="switchTab('insight',this)">💡 智慧洞察</button>
+</div>
+
+<!-- ════════════════ TAB 1: 總覽 ════════════════ -->
+<div id="tab-overview" class="tab-pane active">
+  <div class="section-title">月度核心指標（即時累積）</div>
+  <div class="kpi-row">
+    <div class="kpi-card kpi-rose">
+      <div class="kpi-label">💰 業績 Sales</div>
+      <div class="kpi-value" id="ov-sVal">—</div>
+      <div class="kpi-sub" id="ov-sSub">月目標：—</div>
+      <div class="kpi-pct" id="ov-sPct">—</div>
+      <div class="prog"><div class="prog-fill prog-rose" id="ov-sBar" style="width:0%"></div></div>
+      <div class="kpi-gap" id="ov-sGap"></div>
+    </div>
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-label">👥 活動人數 Active Rep</div>
+      <div class="kpi-value" id="ov-aVal">—</div>
+      <div class="kpi-sub" id="ov-aSub">月目標：—</div>
+      <div class="kpi-pct" id="ov-aPct">—</div>
+      <div class="prog"><div class="prog-fill prog-blue" id="ov-aBar" style="width:0%"></div></div>
+      <div class="kpi-gap" id="ov-aGap"></div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <div class="kpi-label">🆕 招募 Recruitment</div>
+      <div class="kpi-value" id="ov-rVal">—</div>
+      <div class="kpi-sub" id="ov-rSub">月目標：—</div>
+      <div class="kpi-pct" id="ov-rPct">—</div>
+      <div class="prog"><div class="prog-fill prog-green" id="ov-rBar" style="width:0%"></div></div>
+      <div class="kpi-gap" id="ov-rGap"></div>
+    </div>
+  </div>
+
+  <div class="section-title">今日單日即時</div>
+  <div class="alert-row" id="todayAlerts"></div>
+
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>BDM 月業績達成率比較</h3>
+      <div class="chart-wrap"><canvas id="c-bdmSales"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>三維達成率雷達圖（業績 / 活動人數 / 招募）</h3>
+      <div class="chart-wrap"><canvas id="c-radar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>BDM 活動人數達成率</h3>
+      <div class="chart-wrap"><canvas id="c-bdmActive"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>SL 達成率分佈（190 人）</h3>
+      <div class="chart-wrap"><canvas id="c-distrib"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB 2: BDM ════════════════ -->
+<div id="tab-bdm" class="tab-pane">
+  <div class="bdm-grid" id="bdmCards"></div>
+
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>業績：月目標 vs 即時累積 vs 昨日累積</h3>
+      <div class="chart-wrap"><canvas id="c-bdmBar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>今日單日業績（目標 vs 實績）</h3>
+      <div class="chart-wrap"><canvas id="c-dayBar"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>三大指標達成率對比</h3>
+      <div class="chart-wrap"><canvas id="c-threeKPI"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>業績缺口分析（距月目標差距）</h3>
+      <div class="chart-wrap"><canvas id="c-gap"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB 3: 每日 ════════════════ -->
+<div id="tab-daily" class="tab-pane">
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <h3>全月累積業績趨勢（計劃配比 vs 月目標）</h3>
+      <div class="chart-wrap tall"><canvas id="c-trend"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>每日業績配比目標（A / B / C 堆疊）</h3>
+      <div class="chart-wrap"><canvas id="c-dailySales"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>每日活動人數目標</h3>
+      <div class="chart-wrap"><canvas id="c-dailyActive"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:0">
+    <h3>每日明細</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th><th>星期</th>
+            <th>業績% 計劃</th><th>TTL 業績目標</th><th>Div A</th><th>Div B</th><th>Div C</th>
+            <th>活人% 計劃</th><th>TTL 人數目標</th>
+            <th>招募% 計劃</th><th>TTL 招募目標</th>
+          </tr>
+        </thead>
+        <tbody id="dailyTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB 4: SL 排行 ════════════════ -->
+<div id="tab-ranking" class="tab-pane">
+  <div class="alert-row" id="slAlerts"></div>
+
+  <div class="filter-bar">
+    <button class="fb-btn active" onclick="filterReps('all',this)">全部</button>
+    <button class="fb-btn" onclick="filterReps('A',this)">Div A (Eva Ma)</button>
+    <button class="fb-btn" onclick="filterReps('B',this)">Div B (Angus)</button>
+    <button class="fb-btn" onclick="filterReps('C',this)">Div C (Lerry)</button>
+    <button class="fb-btn" onclick="filterReps('over',this)">✅ 已達標</button>
+    <button class="fb-btn" onclick="filterReps('u50',this)">🔴 &lt;50%</button>
+    <input class="search-box" type="text" placeholder="🔍 搜尋姓名 / 家族…" oninput="searchReps(this.value)">
+    <span class="count-badge" id="repCount"></span>
+  </div>
+
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>🥇 Top 15 累積業績達成率</h3>
+      <div class="chart-wrap tall"><canvas id="c-top15"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🔴 需重點關注 Bottom 15</h3>
+      <div class="chart-wrap tall"><canvas id="c-bot15"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:16px">
+    <h3>今日單日業績 Top 20（顏色代表 Div）</h3>
+    <div class="chart-wrap"><canvas id="c-daily20"></canvas></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="tbl-wrap max-h">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Div</th><th>BDM</th><th>家族</th><th>姓名</th>
+            <th>月目標</th><th>今日業績</th><th>月累積業績</th>
+            <th>達成率</th><th>距達標差</th><th>狀態</th>
+          </tr>
+        </thead>
+        <tbody id="repTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB 5: 智慧洞察 ════════════════ -->
+<div id="tab-insight" class="tab-pane">
+
+  <!-- 狀態列 -->
+  <div class="ins-header-bar" id="ins-header"></div>
+
+  <div class="section-title" style="margin-top:16px">📈 月底業績三情境預測</div>
+  <div class="ins-scenario-row" id="ins-scenarios"></div>
+
+  <div class="section-title">💡 核心觀察與發現</div>
+  <div class="ins-obs-grid" id="ins-observations"></div>
+
+  <div class="section-title">📅 行動提醒</div>
+  <div class="ins-action-list" id="ins-actions"></div>
+
+</div>
+
+<script>
+// ── Helpers ──────────────────────────────────────────
+const fmt  = n => new Intl.NumberFormat('zh-TW').format(Math.round(n));
+const fmtM = n => (Math.abs(n) >= 1e6 ? (n/1e6).toFixed(2)+'M' : fmt(n));
+function pctClass(p){ return p>=100?'ok': p>=70?'warn':'bad'; }
+
+// ── Brand palette ─────────────────────────────────────
+const ROSE='#C8185A', WINE='#7A1040', GOLD='#B5882A';
+const DIV_CLR = ['#C8185A','#1A4A7A','#1A7A58'];
+const DIV_LT  = ['rgba(200,24,90,0.12)','rgba(26,74,122,0.12)','rgba(26,122,88,0.12)'];
+
+// ── Chart defaults ────────────────────────────────────
+Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+Chart.defaults.color = '#5C5A56';
+const axOpts = {
+  grid:  { color:'rgba(0,0,0,0.06)' },
+  ticks: { color:'#888070' }
+};
+
+// ── Load data ─────────────────────────────────────────
+const D = window.AVON_DATA || {};
+if(!D.ttl){ document.body.innerHTML='<p style="padding:40px;color:#B02020">⚠ 找不到 war_data.js，請先執行「雅芳戰報_每日更新.ps1」</p>'; }
+
+// Populate header
+document.getElementById('hdrTime').textContent = D.updateTime || '—';
+document.getElementById('hdrFile').textContent = D.excelFile  || '—';
+
+// ── TAB 1: Overview ───────────────────────────────────
+function pctEl(p,id){
+  const el=document.getElementById(id);
+  el.textContent=p+'%';
+  el.className='kpi-pct '+pctClass(p);
+}
+
+const T=D.ttl, KPI=D.todayKPI, BDM=D.bdm;
+if(T){
+  document.getElementById('ov-sVal').textContent='$'+fmt(T.sales.cumAct);
+  document.getElementById('ov-sSub').textContent='月目標：$'+fmt(T.sales.target);
+  pctEl(T.sales.pct,'ov-sPct');
+  document.getElementById('ov-sBar').style.width=Math.min(T.sales.pct,100)+'%';
+  document.getElementById('ov-sGap').textContent='距達標尚差：-$'+fmt(Math.abs(T.sales.gap));
+
+  document.getElementById('ov-aVal').textContent=fmt(T.active.cumAct)+' 人';
+  document.getElementById('ov-aSub').textContent='月目標：'+fmt(T.active.target)+' 人';
+  pctEl(T.active.pct,'ov-aPct');
+  document.getElementById('ov-aBar').style.width=Math.min(T.active.pct,100)+'%';
+  const aGap=T.active.target-T.active.cumAct;
+  document.getElementById('ov-aGap').textContent='距達標尚差：'+fmt(aGap)+' 人';
+
+  document.getElementById('ov-rVal').textContent=fmt(T.recruit.cumAct)+' 人';
+  document.getElementById('ov-rSub').textContent='月目標：'+fmt(T.recruit.target)+' 人';
+  pctEl(T.recruit.pct,'ov-rPct');
+  document.getElementById('ov-rBar').style.width=Math.min(T.recruit.pct,100)+'%';
+  const rGap=T.recruit.target-T.recruit.cumAct;
+  document.getElementById('ov-rGap').textContent='距達標尚差：'+fmt(rGap)+' 人';
+}
+
+// Today alerts
+if(KPI){
+  const alerts=[
+    { cls: KPI.salesDayPct>=50?'warn':'bad',  icon:'💰', label:'單日業績達成率', val:KPI.salesDayPct+'%',  detail:'目標 $'+fmt(KPI.salesDayTgt)+' | 實績 $'+fmt(KPI.salesDayAct) },
+    { cls: KPI.activeDayPct>=50?'warn':'bad', icon:'🧑‍💼', label:'單日活動人數達成率', val:KPI.activeDayPct+'%', detail:'目標 '+fmt(KPI.activeDayTgt)+' | 實績 '+fmt(KPI.activeDayAct) },
+    { cls: KPI.recruitDayPct>=60?'good':'warn',icon:'🆕', label:'單日招募達成率', val:KPI.recruitDayPct+'%', detail:'目標 '+KPI.recruitDayTgt+' | 實績 '+KPI.recruitDayAct },
+    { cls:'info', icon:'🏅', label:'月業績最佳 BDM', val: (() => { const p=BDM.sales.pct; const mx=Math.max(...p); const i=p.indexOf(mx); return BDM.divs[i]+' - '+BDM.names[i]; })(), detail:'達成率 '+Math.max(...BDM.sales.pct)+'%' }
+  ];
+  const box=document.getElementById('todayAlerts');
+  alerts.forEach(a=>{
+    box.innerHTML+=`<div class="alert-box ${a.cls}"><div class="alert-icon">${a.icon}</div><div><div class="alert-label">${a.label}</div><div class="alert-val">${a.val}</div><div class="alert-detail">${a.detail}</div></div></div>`;
+  });
+}
+
+// Charts
+if(BDM){
+  const names=['A - Eva Ma','B - Angus Tsai','C - Lerry Chang'];
+
+  new Chart(document.getElementById('c-bdmSales'),{
+    type:'bar',
+    data:{ labels:names, datasets:[
+      {label:'達成率 %', data:BDM.sales.pct, backgroundColor:DIV_LT, borderColor:DIV_CLR, borderWidth:2},
+      {label:'目標 100%', data:[100,100,100], type:'line', borderColor:GOLD, borderDash:[5,4], pointRadius:0, fill:false, borderWidth:1.5}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}}, scales:{x:axOpts, y:{...axOpts, min:0, max:110, ticks:{...axOpts.ticks,callback:v=>v+'%'}}}}
+  });
+
+  new Chart(document.getElementById('c-radar'),{
+    type:'radar',
+    data:{ labels:['業績達成率','活動人數達成率','招募達成率'], datasets:[
+      {label:'A',data:BDM.sales.pct[0]?[BDM.sales.pct[0],BDM.active.pct[0],BDM.recruit.pct[0]]:[0,0,0], borderColor:DIV_CLR[0], backgroundColor:'rgba(200,24,90,0.08)', pointBackgroundColor:DIV_CLR[0]},
+      {label:'B',data:BDM.sales.pct[1]?[BDM.sales.pct[1],BDM.active.pct[1],BDM.recruit.pct[1]]:[0,0,0], borderColor:DIV_CLR[1], backgroundColor:'rgba(26,74,122,0.08)', pointBackgroundColor:DIV_CLR[1]},
+      {label:'C',data:BDM.sales.pct[2]?[BDM.sales.pct[2],BDM.active.pct[2],BDM.recruit.pct[2]]:[0,0,0], borderColor:DIV_CLR[2], backgroundColor:'rgba(26,122,88,0.08)', pointBackgroundColor:DIV_CLR[2]}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}}, scales:{r:{min:0,max:100,ticks:{backdropColor:'transparent',color:'#888070'},grid:{color:'rgba(0,0,0,0.08)'},angleLines:{color:'rgba(0,0,0,0.1)'},pointLabels:{color:'#5C5A56',font:{size:11}}}}}
+  });
+
+  new Chart(document.getElementById('c-bdmActive'),{
+    type:'bar',
+    data:{ labels:names, datasets:[
+      {label:'達成率 %', data:BDM.active.pct, backgroundColor:'rgba(26,74,122,0.15)', borderColor:DIV_CLR[1], borderWidth:2},
+      {label:'目標 100%', data:[100,100,100], type:'line', borderColor:GOLD, borderDash:[5,4], pointRadius:0, fill:false, borderWidth:1.5}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}}, scales:{x:axOpts, y:{...axOpts, min:0, max:110, ticks:{...axOpts.ticks,callback:v=>v+'%'}}}}
+  });
+}
+
+const REPS = D.reps || [];
+const buckets=[0,0,0,0,0];
+REPS.forEach(r=>{if(r.pct>=100)buckets[4]++;else if(r.pct>=85)buckets[3]++;else if(r.pct>=70)buckets[2]++;else if(r.pct>=50)buckets[1]++;else buckets[0]++;});
+new Chart(document.getElementById('c-distrib'),{
+  type:'doughnut',
+  data:{labels:['<50%','50-70%','70-85%','85-100%','≥100%'],
+    datasets:[{data:buckets,backgroundColor:['#F0B0B0','#FFCC66','#AAD4F0','#88CCAA','#44AA88'],borderColor:'#FAF8F5',borderWidth:3}]},
+  options:{plugins:{legend:{position:'right',labels:{font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} 人`}}}}
+});
+
+// ── TAB 2: BDM ────────────────────────────────────────
+const BDMC = document.getElementById('bdmCards');
+if(BDM){
+  [0,1,2].forEach(i=>{
+    const pc=p=>`<span class="pct-${pctClass(p)}">${p}%</span>`;
+    BDMC.innerHTML+=`
+    <div class="bdm-card bdm-${BDM.divs[i]}">
+      <div class="bdm-badge">${BDM.divs[i]}</div>
+      <div class="bdm-name">${BDM.names[i]}</div>
+      <div class="bdm-row"><span class="lbl">月業績目標</span><span class="val">$${fmt(BDM.sales.target[i])}</span></div>
+      <div class="bdm-row"><span class="lbl">即時累積業績</span><span class="val">$${fmt(BDM.sales.cumAct[i])}</span></div>
+      <div class="bdm-row"><span class="lbl">月達成率</span>${pc(BDM.sales.pct[i])}</div>
+      <div class="prog" style="margin:6px 0"><div class="prog-fill prog-rose" style="width:${Math.min(BDM.sales.pct[i],100)}%"></div></div>
+      <div class="bdm-row" style="margin-top:8px"><span class="lbl">活動人數達成率</span>${pc(BDM.active.pct[i])}</div>
+      <div class="prog" style="margin:4px 0"><div class="prog-fill prog-blue" style="width:${Math.min(BDM.active.pct[i],100)}%"></div></div>
+      <div class="bdm-row" style="margin-top:6px"><span class="lbl">招募達成率</span>${pc(BDM.recruit.pct[i])}</div>
+      <div class="prog" style="margin:4px 0"><div class="prog-fill prog-green" style="width:${Math.min(BDM.recruit.pct[i],100)}%"></div></div>
+      <div class="bdm-row" style="margin-top:8px"><span class="lbl">今日業績</span><span class="val">$${fmt(BDM.sales.dayAct[i])}</span></div>
+      <div class="bdm-row"><span class="lbl">距達標差</span><span class="val" style="color:#B02020">$(${fmt(Math.abs(BDM.sales.gap[i]))})</span></div>
+    </div>`;
+  });
+
+  new Chart(document.getElementById('c-bdmBar'),{
+    type:'bar',
+    data:{labels:['A - Eva Ma','B - Angus Tsai','C - Lerry Chang'],datasets:[
+      {label:'月目標',data:BDM.sales.target,backgroundColor:'rgba(181,136,42,0.18)',borderColor:GOLD,borderWidth:1.5},
+      {label:'即時累積',data:BDM.sales.cumAct,backgroundColor:DIV_LT,borderColor:DIV_CLR,borderWidth:2},
+      {label:'昨日累積',data:BDM.sales.prevAct,backgroundColor:'rgba(0,0,0,0.05)',borderColor:'#C0B8B0',borderWidth:1,borderDash:[4,3],type:'line',pointRadius:4,fill:false}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:axOpts,y:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v/1000000)+'M'}}}}
+  });
+
+  new Chart(document.getElementById('c-dayBar'),{
+    type:'bar',
+    data:{labels:['A - Eva Ma','B - Angus Tsai','C - Lerry Chang'],datasets:[
+      {label:'今日目標',data:BDM.sales.dayTgt,backgroundColor:'rgba(181,136,42,0.2)',borderColor:GOLD,borderWidth:1.5},
+      {label:'今日實績',data:BDM.sales.dayAct,backgroundColor:DIV_LT,borderColor:DIV_CLR,borderWidth:2}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:axOpts,y:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v)}}}}
+  });
+
+  new Chart(document.getElementById('c-threeKPI'),{
+    type:'bar',
+    data:{labels:['業績 %','活動人數 %','招募 %'],datasets:[
+      {label:'A',data:[BDM.sales.pct[0],BDM.active.pct[0],BDM.recruit.pct[0]],backgroundColor:'rgba(200,24,90,0.7)',borderColor:DIV_CLR[0],borderWidth:2},
+      {label:'B',data:[BDM.sales.pct[1],BDM.active.pct[1],BDM.recruit.pct[1]],backgroundColor:'rgba(26,74,122,0.7)',borderColor:DIV_CLR[1],borderWidth:2},
+      {label:'C',data:[BDM.sales.pct[2],BDM.active.pct[2],BDM.recruit.pct[2]],backgroundColor:'rgba(26,122,88,0.7)',borderColor:DIV_CLR[2],borderWidth:2}
+    ]},
+    options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:axOpts,y:{...axOpts,min:0,max:100,ticks:{...axOpts.ticks,callback:v=>v+'%'}}}}
+  });
+
+  new Chart(document.getElementById('c-gap'),{
+    type:'bar',
+    data:{labels:['A - Eva Ma','B - Angus Tsai','C - Lerry Chang'],datasets:[
+      {label:'差距金額',data:BDM.sales.gap.map(v=>Math.abs(v)),backgroundColor:'rgba(176,32,32,0.15)',borderColor:'#B02020',borderWidth:2}
+    ]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'-$'+fmt(c.raw)}}},
+      scales:{x:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v/10000)+'萬'}},y:axOpts}}
+  });
+}
+
+// ── TAB 3: Daily ──────────────────────────────────────
+const DAILY=(D.daily||[]).filter(d=>d.ttlSales>0);
+const dlabels=DAILY.map(d=>d.date+'('+d.wd+')');
+
+let cumT=0;
+const cumTargets=DAILY.map(d=>{cumT+=d.ttlSales;return cumT;});
+
+new Chart(document.getElementById('c-trend'),{
+  type:'line',
+  data:{labels:dlabels,datasets:[
+    {label:'每日計劃累積',data:cumTargets,borderColor:GOLD,backgroundColor:'rgba(181,136,42,0.08)',tension:0.3,fill:true},
+    {label:'月度總目標',data:DAILY.map((_,i)=>i===DAILY.length-1?cumTargets[DAILY.length-1]:null),type:'line',borderColor:'#B02020',borderDash:[6,3],pointRadius:0,fill:false},
+  ]},
+  options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:{...axOpts,ticks:{...axOpts.ticks,maxRotation:45}},y:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v/1000000)+'M'}}}}
+});
+
+new Chart(document.getElementById('c-dailySales'),{
+  type:'bar',
+  data:{labels:dlabels,datasets:[
+    {label:'Div A',data:DAILY.map(d=>d.A),backgroundColor:'rgba(200,24,90,0.65)',stack:'s'},
+    {label:'Div B',data:DAILY.map(d=>d.B),backgroundColor:'rgba(26,74,122,0.65)',stack:'s'},
+    {label:'Div C',data:DAILY.map(d=>d.C),backgroundColor:'rgba(26,122,88,0.65)',stack:'s'}
+  ]},
+  options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:{stacked:true,...axOpts,ticks:{...axOpts.ticks,maxRotation:45}},y:{stacked:true,...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v/10000)+'萬'}}}}
+});
+
+new Chart(document.getElementById('c-dailyActive'),{
+  type:'bar',
+  data:{labels:dlabels,datasets:[{label:'活動人數目標',data:DAILY.map(d=>d.ttlActive),backgroundColor:'rgba(26,74,122,0.55)',borderColor:'#1A4A7A',borderWidth:1.5}]},
+  options:{plugins:{legend:{labels:{font:{size:11}}}},scales:{x:{...axOpts,ticks:{...axOpts.ticks,maxRotation:45}},y:axOpts}}
+});
+
+// Daily table
+const dtbody=document.getElementById('dailyTbody');
+DAILY.forEach(d=>{
+  const tr=document.createElement('tr');
+  if(d.date==='5/31') tr.classList.add('today-row');
+  tr.innerHTML=`<td>${d.date}${d.date==='5/31'?' 📍':''}</td><td>${d.wd}</td><td>${d.salesPct||'—'}</td><td>$${fmt(d.ttlSales)}</td><td>$${fmt(d.A)}</td><td>$${fmt(d.B)}</td><td>$${fmt(d.C)}</td><td>${d.activePct||'—'}</td><td>${fmt(d.ttlActive)}</td><td>${d.recruitPct||'—'}</td><td>${d.ttlRecruit||'—'}</td>`;
+  dtbody.appendChild(tr);
+});
+
+// ── TAB 4: SL Ranking ────────────────────────────────
+// Alert stats
+const slBox=document.getElementById('slAlerts');
+const over=REPS.filter(r=>r.pct>=100).length;
+const m8599=REPS.filter(r=>r.pct>=85&&r.pct<100).length;
+const m5084=REPS.filter(r=>r.pct>=50&&r.pct<85).length;
+const u50=REPS.filter(r=>r.pct<50).length;
+slBox.innerHTML=`
+  <div class="alert-box good"><div class="alert-icon">✅</div><div><div class="alert-label">已達標 ≥100%</div><div class="alert-val">${over} 人</div></div></div>
+  <div class="alert-box info"><div class="alert-icon">⚡</div><div><div class="alert-label">85–99% 衝刺區</div><div class="alert-val">${m8599} 人</div></div></div>
+  <div class="alert-box warn"><div class="alert-icon">⚠</div><div><div class="alert-label">50–84% 追趕區</div><div class="alert-val">${m5084} 人</div></div></div>
+  <div class="alert-box bad"><div class="alert-icon">🚨</div><div><div class="alert-label">&lt;50% 警示區</div><div class="alert-val">${u50} 人</div></div></div>`;
+
+function statusTag(p){
+  if(p>=100) return '<span class="status-tag st-over">✅ 達標</span>';
+  if(p>=85)  return '<span class="status-tag st-sprint">⚡ 衝刺</span>';
+  if(p>=70)  return '<span class="status-tag st-chase">⚠ 追趕</span>';
+  if(p>=50)  return '<span class="status-tag st-warn">🔥 落後</span>';
+  return '<span class="status-tag st-bad">🚨 警示</span>';
+}
+
+let curFilter='all', curSearch='';
+function renderReps(){
+  let data=[...REPS].sort((a,b)=>b.pct-a.pct);
+  if(curFilter==='A') data=data.filter(r=>r.div==='A');
+  else if(curFilter==='B') data=data.filter(r=>r.div==='B');
+  else if(curFilter==='C') data=data.filter(r=>r.div==='C');
+  else if(curFilter==='over') data=data.filter(r=>r.pct>=100);
+  else if(curFilter==='u50') data=data.filter(r=>r.pct<50);
+  if(curSearch) data=data.filter(r=>r.name.includes(curSearch)||r.family.includes(curSearch)||r.bdm.includes(curSearch));
+  const tb=document.getElementById('repTbody');
+  tb.innerHTML='';
+  data.forEach((r,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    const gapHtml=r.gap>=0?`<span class="pct-ok">+$${fmt(r.gap)}</span>`:`<span class="pct-bad">-$${fmt(Math.abs(r.gap))}</span>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${medal}</td><td><span class="tag tag-${r.div}">${r.div}</span></td><td style="color:var(--text2);font-size:0.78rem">${r.bdm}</td><td style="color:var(--text2);font-size:0.78rem">${r.family}</td><td style="font-weight:600">${r.name}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.target)}</td><td style="font-family:'DM Mono',monospace;color:${r.dayActual>0?'var(--green-d)':'var(--text3)'}">$${fmt(r.dayActual)}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.cumActual)}</td><td class="pct-${pctClass(r.pct)}" style="font-family:'DM Mono',monospace">${r.pct}%</td><td>${gapHtml}</td><td>${statusTag(r.pct)}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('repCount').textContent=`共 ${data.length} 人`;
+}
+renderReps();
+
+function filterReps(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.fb-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReps();
+}
+function searchReps(v){ curSearch=v; renderReps(); }
+
+// Top/Bottom charts
+const sorted=[...REPS].sort((a,b)=>b.pct-a.pct);
+const top15=sorted.slice(0,15);
+const bot15=sorted.slice(-15).reverse();
+
+new Chart(document.getElementById('c-top15'),{
+  type:'bar',
+  data:{labels:top15.map(r=>r.name),datasets:[{label:'達成率',data:top15.map(r=>r.pct),
+    backgroundColor:top15.map(r=>r.pct>=100?'rgba(26,122,88,0.7)':'rgba(26,74,122,0.55)'),
+    borderColor:top15.map(r=>r.pct>=100?'#1A7A58':'#1A4A7A'),borderWidth:2}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}},
+    scales:{x:{...axOpts,min:0,ticks:{...axOpts.ticks,callback:v=>v+'%'}},y:{...axOpts,ticks:{...axOpts.ticks,font:{size:11}}}}}
+});
+
+new Chart(document.getElementById('c-bot15'),{
+  type:'bar',
+  data:{labels:bot15.map(r=>r.name),datasets:[{label:'達成率',data:bot15.map(r=>r.pct),
+    backgroundColor:bot15.map(r=>r.pct<50?'rgba(176,32,32,0.6)':'rgba(154,104,0,0.5)'),
+    borderColor:bot15.map(r=>r.pct<50?'#B02020':'#9A6800'),borderWidth:2}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}},
+    scales:{x:{...axOpts,min:0,max:90,ticks:{...axOpts.ticks,callback:v=>v+'%'}},y:{...axOpts,ticks:{...axOpts.ticks,font:{size:11}}}}}
+});
+
+const top20d=[...REPS].sort((a,b)=>b.dayActual-a.dayActual).slice(0,20);
+new Chart(document.getElementById('c-daily20'),{
+  type:'bar',
+  data:{labels:top20d.map(r=>r.name),datasets:[{label:'今日業績',data:top20d.map(r=>r.dayActual),
+    backgroundColor:top20d.map(r=>r.div==='A'?'rgba(200,24,90,0.65)':r.div==='B'?'rgba(26,74,122,0.65)':'rgba(26,122,88,0.65)'),
+    borderWidth:1}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+fmt(c.raw)}}},
+    scales:{x:{...axOpts,ticks:{...axOpts.ticks,font:{size:10}}},y:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v)}}}}
+});
+
+// ── Tab switching ─────────────────────────────────────
+// ── TAB 5: 智慧洞察 ──────────────────────────────────
+function buildInsight() {
+  if (!D.ttl || !D.bdm || !D.daily) return;
+  const T = D.ttl, KPI = D.todayKPI, BDM = D.bdm;
+  const DAILY = (D.daily || []).filter(d => d.ttlSales > 0);
+
+  // 計算已過工作天：根據資料更新日期比對 daily 計劃表
+  const totalWD = DAILY.length;
+  // 從 updateTime 解析今天日期，例如 "2026/6/2 上午 08:33" → "6/2"
+  let todayDateStr = '';
+  if (D.updateTime) {
+    const m = D.updateTime.match(/(\d+)\/(\d+)\/(\d+)/);
+    if (m) todayDateStr = m[2] + '/' + m[3]; // e.g. "6/2"
+  }
+  // 找出今天對應的 daily 索引（或用累積業績估算）
+  let todayIdx = DAILY.length - 1;
+  if (todayDateStr) {
+    const found = DAILY.findIndex(d => d.date === todayDateStr);
+    if (found >= 0) todayIdx = found;
+    else {
+      // 若找不到精確日期，用累積業績 / 月目標比例估算
+      let cumP = 0;
+      for (let i = 0; i < DAILY.length; i++) {
+        cumP += DAILY[i].ttlSales;
+        if (cumP / T.sales.target >= T.sales.pct / 100) { todayIdx = i; break; }
+      }
+    }
+  }
+  let cumToToday = 0;
+  for (let i = 0; i <= todayIdx; i++) cumToToday += DAILY[i].ttlSales;
+
+  const doneWD = todayIdx + 1;
+  const wdPct = Math.round(doneWD / totalWD * 100);
+  const salesPct = T.sales.pct;
+  const diff = (salesPct - wdPct).toFixed(1);
+  const diffSign = diff > 0 ? '+' : '';
+
+  // 剩餘工作天
+  const remWD = totalWD - doneWD;
+  const remTarget = T.sales.target - T.sales.cumAct;
+
+  // 三情境預測
+  // 目前日均業績
+  const avgDaily = T.sales.cumAct / doneWD;
+  const optMulti = 1.25, baseMulti = 1.0, consMulti = 0.75;
+  const opt  = Math.round(T.sales.cumAct + avgDaily * optMulti  * remWD);
+  const base = Math.round(T.sales.cumAct + avgDaily * baseMulti * remWD);
+  const cons = Math.round(T.sales.cumAct + avgDaily * consMulti * remWD);
+  const optPct  = Math.round(opt  / T.sales.target * 100 * 10) / 10;
+  const basePct = Math.round(base / T.sales.target * 100 * 10) / 10;
+  const consPct = Math.round(cons / T.sales.target * 100 * 10) / 10;
+
+  // 最佳/最弱 BDM
+  const bestSIdx  = BDM.sales.pct.indexOf(Math.max(...BDM.sales.pct));
+  const worstSIdx = BDM.sales.pct.indexOf(Math.min(...BDM.sales.pct));
+  const bestAIdx  = BDM.active.pct.indexOf(Math.max(...BDM.active.pct));
+  const bestRIdx  = BDM.recruit.pct.indexOf(Math.max(...BDM.recruit.pct));
+  const gap01 = Math.abs(BDM.sales.pct[bestSIdx] - BDM.sales.pct[worstSIdx]).toFixed(1);
+
+  // SL分析
+  const REPS = D.reps || [];
+  const overReps  = REPS.filter(r => r.pct >= 100);
+  const under50   = REPS.filter(r => r.pct < 50);
+  const zeroDay   = REPS.filter(r => r.dayActual === 0);
+  const top3 = [...REPS].sort((a,b) => b.dayActual - a.dayActual).slice(0,3);
+
+  const fmt  = n => new Intl.NumberFormat('zh-TW').format(Math.round(n));
+  const fmtM = n => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : '$' + fmt(n);
+
+  // ── 時間軸 ────────────────────
+  const mo = D.excelFile ? (D.excelFile.match(/M(\d{2})/)||['','??'])[1] : '??';
+  document.getElementById('ins-header').innerHTML = `
+    <span>📅 資料截至 ${D.updateTime}</span>
+    <span class="ins-pipe">|</span>
+    <span>工作天 <strong>${doneWD}/${totalWD}</strong> 已完成（${wdPct}%）</span>
+    <span class="ins-pipe">|</span>
+    <span>業績 <strong class="${salesPct >= wdPct ? 'c-green' : 'c-red'}">${salesPct}%（${diffSign}${diff}%）</strong></span>
+    <span class="ins-pipe">|</span>
+    <span>剩餘工作天：<strong>${remWD} 天</strong></span>`;
+
+  // ── 三情境 ────────────────────
+  document.getElementById('ins-scenarios').innerHTML = `
+    <div class="sc-card sc-opt">
+      <div class="sc-label">✅ 樂觀情境</div>
+      <div class="sc-val">${fmtM(opt)}</div>
+      <div class="sc-pct" style="color:var(--green-d)">${optPct}%</div>
+      <div class="sc-desc">維持日均 ${fmtM(avgDaily*optMulti)}（+25%）</div>
+    </div>
+    <div class="sc-card sc-base">
+      <div class="sc-label">📋 基準情境（依計畫）</div>
+      <div class="sc-val">${fmtM(base)}</div>
+      <div class="sc-pct" style="color:var(--amber-d)">${basePct}%</div>
+      <div class="sc-desc">維持當前日均 ${fmtM(avgDaily)}</div>
+    </div>
+    <div class="sc-card sc-cons">
+      <div class="sc-label">⚠ 保守情境</div>
+      <div class="sc-val">${fmtM(cons)}</div>
+      <div class="sc-pct" style="color:var(--brick-d)">${consPct}%</div>
+      <div class="sc-desc">日均降至 ${fmtM(avgDaily*consMulti)}（-25%）</div>
+    </div>`;
+
+  // ── 核心觀察 ──────────────────
+  const obs = [
+    {
+      color: 'green',
+      icon: '🏆',
+      title: '業績最強 BDM',
+      body: `Div ${BDM.divs[bestSIdx]} - <strong>${BDM.names[bestSIdx]}</strong> 月達成率 <strong>${BDM.sales.pct[bestSIdx]}%</strong>，三隊中排名第一。` +
+            `活動人數達成率 ${BDM.active.pct[bestSIdx]}%，招募達成率 ${BDM.recruit.pct[bestSIdx]}%，三項指標均領先。`
+    },
+    {
+      color: 'amber',
+      icon: '⚡',
+      title: '需要追趕的隊伍',
+      body: `Div ${BDM.divs[worstSIdx]} - <strong>${BDM.names[worstSIdx]}</strong> 月達成率 <strong>${BDM.sales.pct[worstSIdx]}%</strong>，` +
+            `與最佳相差 <strong>${gap01} 個百分點</strong>。` +
+            `距達標尚差 <strong>${fmtM(Math.abs(BDM.sales.gap[worstSIdx]))}</strong>，需加強每日衝刺。`
+    },
+    {
+      color: 'rose',
+      icon: '📊',
+      title: '整體進度觀察',
+      body: `目前業績進度（${salesPct}%）${parseFloat(diff) >= 0 ? '超前' : '落後'}工作天進度（${wdPct}%）<strong>${Math.abs(diff)} 個百分點</strong>。` +
+            `日均業績 <strong>${fmtM(avgDaily)}</strong>，若維持此速度，` +
+            `月底預估落點為 <strong>${fmtM(base)}（${basePct}%）</strong>。` +
+            (remTarget > 0 ? `距達標仍需 <strong>${fmtM(remTarget)}</strong>。` : `已超標 <strong>${fmtM(-remTarget)}</strong>！🎉`)
+    },
+    {
+      color: 'blue',
+      icon: '👥',
+      title: 'SL 戰力分析',
+      body: `190 位 SL 中，<strong>${overReps.length} 人已達標（${Math.round(overReps.length/REPS.length*100)}%）</strong>。` +
+            `${under50.length} 人達成率未達 50%，需要重點關注。` +
+            `今日零業績 ${zeroDay.length} 人（${Math.round(zeroDay.length/REPS.length*100)}%）。` +
+            `今日業績王：<strong>${top3[0]?.name || '—'}（${fmtM(top3[0]?.dayActual||0)}）</strong>。`
+    }
+  ];
+
+  const colorMap = {
+    green: { bg: 'var(--green-l)', border: 'var(--green-b)', title: 'var(--green-d)' },
+    amber: { bg: 'var(--amber-l)', border: 'var(--amber-b)', title: 'var(--amber-d)' },
+    rose:  { bg: 'rgba(200,24,90,0.06)', border: 'rgba(200,24,90,0.25)', title: 'var(--rose)' },
+    blue:  { bg: 'var(--blue-l)', border: 'var(--blue-b)', title: 'var(--blue-d)' }
+  };
+
+  document.getElementById('ins-observations').innerHTML = obs.map(o => {
+    const c = colorMap[o.color];
+    return `<div class="obs-card" style="background:${c.bg};border-color:${c.border}">
+      <div class="obs-title" style="color:${c.title}">${o.icon} ${o.title}</div>
+      <div class="obs-body">${o.body}</div>
+    </div>`;
+  }).join('');
+
+  // ── 行動提醒 ──────────────────
+  const actions = [];
+  // 根據達成率動態生成行動提醒
+  if (salesPct < wdPct - 5) {
+    actions.push({ level:'danger', date:'立即', tag:'緊急', obs:`業績進度落後工作天 ${Math.abs(diff)} 個百分點`, act:'召開緊急動員，各 BDM 制定短期衝刺計畫' });
+  }
+  if (KPI.salesDayPct < 50) {
+    actions.push({ level:'warn', date:'今日', tag:'注意', obs:`今日單日達成率僅 ${KPI.salesDayPct}%，遠低於目標`, act:'下午追蹤各隊進度，推播提醒 SL 今日衝單' });
+  }
+  if (BDM.active.pct[worstSIdx] < 65) {
+    actions.push({ level:'warn', date:'本週', tag:'觀察', obs:`活動人數達成率最低 ${Math.min(...BDM.active.pct)}%，已影響業績基本盤`, act:'強化活動人數追蹤，要求各 Zone 每日回報' });
+  }
+  if (under50.length > 20) {
+    actions.push({ level:'danger', date:'本週', tag:'重點', obs:`${under50.length} 位 SL 達成率低於 50%`, act:'BDM 逐一約談落後 SL，制定個人追趕計畫' });
+  }
+  actions.push({ level:'info', date:'月底前', tag:'衝刺', obs:`距月目標尚差 ${fmtM(Math.abs(T.sales.gap))}`, act:`需每日維持 ${fmtM(remTarget / Math.max(remWD,1))} 以上業績節奏` });
+  if (overReps.length > 0) {
+    actions.push({ level:'good', date:'持續', tag:'激勵', obs:`${overReps.length} 位 SL 已達標，正向氛圍建立中`, act:'公開表揚達標 SL，帶動未達標者士氣' });
+  }
+
+  const levelStyle = {
+    danger: { bg:'var(--brick-l)', border:'var(--brick-b)', tag:'var(--brick-d)', tagBg:'rgba(176,32,32,0.12)' },
+    warn:   { bg:'var(--amber-l)', border:'var(--amber-b)', tag:'var(--amber-d)', tagBg:'rgba(154,104,0,0.12)' },
+    info:   { bg:'var(--blue-l)',  border:'var(--blue-b)',  tag:'var(--blue-d)',  tagBg:'rgba(26,74,122,0.12)' },
+    good:   { bg:'var(--green-l)', border:'var(--green-b)', tag:'var(--green-d)', tagBg:'rgba(26,122,88,0.12)' }
+  };
+
+  document.getElementById('ins-actions').innerHTML = actions.map(a => {
+    const s = levelStyle[a.level];
+    return `<div class="act-row" style="background:${s.bg};border-color:${s.border}">
+      <div class="act-date">${a.date}</div>
+      <div><span class="act-tag" style="color:${s.tag};background:${s.tagBg}">${a.tag}</span></div>
+      <div class="act-obs">${a.obs}</div>
+      <div class="act-rec">→ ${a.act}</div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='insight') buildInsight();
+}
+</script>
+</body>
+</html>
