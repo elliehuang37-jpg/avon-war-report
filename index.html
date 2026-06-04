@@ -953,6 +953,14 @@ function statusTag(p){
 }
 
 let curFilter='all', curSearch='';
+function hasRepName(r){
+  return r && r.name && r.name.trim() && r.name.trim() !== '#';
+}
+function repLabel(r){
+  if (hasRepName(r)) return r.name;
+  return [r.zone, r.family].filter(Boolean).join(' ') || '未命名';
+}
+const rankedReps = REPS.filter(r => r.target > 0 && hasRepName(r));
 function renderReps(){
   let data=[...REPS].sort((a,b)=>b.pct-a.pct);
   if(curFilter==='A') data=data.filter(r=>r.div==='A');
@@ -960,14 +968,14 @@ function renderReps(){
   else if(curFilter==='C') data=data.filter(r=>r.div==='C');
   else if(curFilter==='over') data=data.filter(r=>r.pct>=100);
   else if(curFilter==='u50') data=data.filter(r=>r.pct<50);
-  if(curSearch) data=data.filter(r=>r.name.includes(curSearch)||r.family.includes(curSearch)||r.bdm.includes(curSearch));
+  if(curSearch) data=data.filter(r=>repLabel(r).includes(curSearch)||r.family.includes(curSearch)||r.bdm.includes(curSearch)||r.zone.includes(curSearch));
   const tb=document.getElementById('repTbody');
   tb.innerHTML='';
   data.forEach((r,i)=>{
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
     const gapHtml=r.gap>=0?`<span class="pct-ok">+$${fmt(r.gap)}</span>`:`<span class="pct-bad">-$${fmt(Math.abs(r.gap))}</span>`;
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${medal}</td><td><span class="tag tag-${r.div}">${r.div}</span></td><td style="color:var(--text2);font-size:0.78rem">${r.bdm}</td><td style="color:var(--text2);font-size:0.78rem">${r.family}</td><td style="font-weight:600">${r.name}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.target)}</td><td style="font-family:'DM Mono',monospace;color:${r.dayActual>0?'var(--green-d)':'var(--text3)'}">$${fmt(r.dayActual)}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.cumActual)}</td><td class="pct-${pctClass(r.pct)}" style="font-family:'DM Mono',monospace">${r.pct}%</td><td>${gapHtml}</td><td>${statusTag(r.pct)}</td>`;
+    tr.innerHTML=`<td>${medal}</td><td><span class="tag tag-${r.div}">${r.div}</span></td><td style="color:var(--text2);font-size:0.78rem">${r.bdm}</td><td style="color:var(--text2);font-size:0.78rem">${r.family}</td><td style="font-weight:600">${repLabel(r)}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.target)}</td><td style="font-family:'DM Mono',monospace;color:${r.dayActual>0?'var(--green-d)':'var(--text3)'}">$${fmt(r.dayActual)}</td><td style="font-family:'DM Mono',monospace">$${fmt(r.cumActual)}</td><td class="pct-${pctClass(r.pct)}" style="font-family:'DM Mono',monospace">${r.pct}%</td><td>${gapHtml}</td><td>${statusTag(r.pct)}</td>`;
     tb.appendChild(tr);
   });
   document.getElementById('repCount').textContent=`共 ${data.length} 人`;
@@ -983,13 +991,13 @@ function filterReps(f,btn){
 function searchReps(v){ curSearch=v; renderReps(); }
 
 // Top/Bottom charts
-const sorted=[...REPS].sort((a,b)=>b.pct-a.pct);
+const sorted=[...rankedReps].sort((a,b)=>b.pct-a.pct);
 const top15=sorted.slice(0,15);
 const bot15=sorted.slice(-15).reverse();
 
 new Chart(document.getElementById('c-top15'),{
   type:'bar',
-  data:{labels:top15.map(r=>r.name),datasets:[{label:'達成率',data:top15.map(r=>r.pct),
+  data:{labels:top15.map(repLabel),datasets:[{label:'達成率',data:top15.map(r=>r.pct),
     backgroundColor:top15.map(r=>r.pct>=100?'rgba(26,122,88,0.7)':'rgba(26,74,122,0.55)'),
     borderColor:top15.map(r=>r.pct>=100?'#1A7A58':'#1A4A7A'),borderWidth:2}]},
   options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}},
@@ -998,17 +1006,17 @@ new Chart(document.getElementById('c-top15'),{
 
 new Chart(document.getElementById('c-bot15'),{
   type:'bar',
-  data:{labels:bot15.map(r=>r.name),datasets:[{label:'達成率',data:bot15.map(r=>r.pct),
+  data:{labels:bot15.map(repLabel),datasets:[{label:'達成率',data:bot15.map(r=>r.pct),
     backgroundColor:bot15.map(r=>r.pct<50?'rgba(176,32,32,0.6)':'rgba(154,104,0,0.5)'),
     borderColor:bot15.map(r=>r.pct<50?'#B02020':'#9A6800'),borderWidth:2}]},
   options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'%'}}},
     scales:{x:{...axOpts,min:0,max:90,ticks:{...axOpts.ticks,callback:v=>v+'%'}},y:{...axOpts,ticks:{...axOpts.ticks,font:{size:11}}}}}
 });
 
-const top20d=[...REPS].sort((a,b)=>b.dayActual-a.dayActual).slice(0,20);
+const top20d=[...rankedReps].filter(r=>r.dayActual>0).sort((a,b)=>b.dayActual-a.dayActual).slice(0,20);
 new Chart(document.getElementById('c-daily20'),{
   type:'bar',
-  data:{labels:top20d.map(r=>r.name),datasets:[{label:'今日業績',data:top20d.map(r=>r.dayActual),
+  data:{labels:top20d.map(repLabel),datasets:[{label:'今日業績',data:top20d.map(r=>r.dayActual),
     backgroundColor:top20d.map(r=>r.div==='A'?'rgba(200,24,90,0.65)':r.div==='B'?'rgba(26,74,122,0.65)':'rgba(26,122,88,0.65)'),
     borderWidth:1}]},
   options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+fmt(c.raw)}}},
@@ -1269,7 +1277,7 @@ function buildInsight() {
   const overReps  = REPS.filter(r => r.pct >= 100);
   const under50   = REPS.filter(r => r.pct < 50);
   const zeroDay   = REPS.filter(r => r.dayActual === 0);
-  const top3 = [...REPS].sort((a,b) => b.dayActual - a.dayActual).slice(0,3);
+  const top3 = [...rankedReps].sort((a,b) => b.dayActual - a.dayActual).slice(0,3);
 
   const fmt  = n => new Intl.NumberFormat('zh-TW').format(Math.round(n));
   const fmtM = n => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : '$' + fmt(n);
@@ -1339,7 +1347,7 @@ function buildInsight() {
       body: `190 位 SL 中，<strong>${overReps.length} 人已達標（${Math.round(overReps.length/REPS.length*100)}%）</strong>。` +
             `${under50.length} 人達成率未達 50%，需要重點關注。` +
             `今日零業績 ${zeroDay.length} 人（${Math.round(zeroDay.length/REPS.length*100)}%）。` +
-            `今日業績王：<strong>${top3[0]?.name || '—'}（${fmtM(top3[0]?.dayActual||0)}）</strong>。`
+            `今日業績王：<strong>${top3[0] ? repLabel(top3[0]) : '—'}（${fmtM(top3[0]?.dayActual||0)}）</strong>。`
     }
   ];
 
