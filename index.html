@@ -1056,6 +1056,13 @@ function buildProgress() {
   const todayWDIdx = wdDays.findIndex(d => d.date === todayStr);
   const actualCumSales = T ? T.sales.cumAct : 0;
   const planTarget = P.salesTarget;
+  const actualDailyByDate = (d) => {
+    const wdI = wdDays.findIndex(w => w.date === d.date);
+    if (wdI < 0 || wdI > todayWDIdx) return null;
+    if (d.date === todayStr && KPI && Number.isFinite(KPI.salesDayAct)) return KPI.salesDayAct;
+    const dd = DAILY.find(x => x.date === d.date);
+    return dd ? dd.ttlSales : null;
+  };
 
   // 波段時間軸
   document.getElementById('prog-waveline').innerHTML = `
@@ -1149,11 +1156,7 @@ function buildProgress() {
   // 每日業績 bar chart (working days only)
   const wdLabels = wdDays.map(d => d.date);
   const planDailyVals = wdDays.map(d => d.sDailyVal);
-  // actual daily: use war_data daily array matched by date
-  const actDailyVals = wdDays.map(d => {
-    const dd = DAILY.find(x => x.date === d.date);
-    return dd ? dd.ttlSales : null;
-  });
+  const actDailyVals = wdDays.map(d => actualDailyByDate(d));
 
   new Chart(document.getElementById('c-progDaily'), {
     type: 'bar',
@@ -1171,8 +1174,7 @@ function buildProgress() {
   allDays.forEach((d,i) => {
     const isToday = d.date === todayStr;
     const wdI = wdDays.findIndex(w => w.date === d.date);
-    const dd = DAILY.find(x => x.date === d.date);
-    const actDaily = dd ? dd.ttlSales : null;
+    const actDaily = actualDailyByDate(d);
     const cumActPct = wdI >= 0 && wdI <= todayWDIdx
       ? Math.round(((wdI+1)/(todayWDIdx+1))*actualCumSales/planTarget*1000)/10
       : null;
