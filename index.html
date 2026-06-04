@@ -1065,6 +1065,7 @@ function buildProgress() {
   const todayWDIdx = wdDays.findIndex(d => d.date === todayStr);
   const actualCumSales = T ? T.sales.cumAct : 0;
   const planTarget = P.salesTarget;
+  const actualTarget = T && T.sales ? T.sales.target : planTarget;
   const actualDailyByDate = (d) => {
     const wdI = wdDays.findIndex(w => w.date === d.date);
     if (wdI < 0 || wdI > todayWDIdx) return null;
@@ -1124,7 +1125,7 @@ function buildProgress() {
     if (wdI < 0 || wdI > todayWDIdx) return null;
     // interpolate actual cumulative linearly up to today
     if (todayWDIdx >= 0) {
-      return Math.round(((wdI+1) / (todayWDIdx+1)) * actualCumSales / planTarget * 1000) / 10;
+      return Math.round(((wdI+1) / (todayWDIdx+1)) * actualCumSales / actualTarget * 1000) / 10;
     }
     return null;
   });
@@ -1185,7 +1186,7 @@ function buildProgress() {
     const wdI = wdDays.findIndex(w => w.date === d.date);
     const actDaily = actualDailyByDate(d);
     const cumActPct = wdI >= 0 && wdI <= todayWDIdx
-      ? Math.round(((wdI+1)/(todayWDIdx+1))*actualCumSales/planTarget*1000)/10
+      ? Math.round(((wdI+1)/(todayWDIdx+1))*actualCumSales/actualTarget*1000)/10
       : null;
     const diff = cumActPct !== null ? (cumActPct - d.sCumPct).toFixed(1) : null;
     const diffHtml = diff !== null
