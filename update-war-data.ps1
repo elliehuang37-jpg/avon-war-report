@@ -2,8 +2,8 @@
 # Usage: Right-click -> Run with PowerShell
 param([string]$XL = "")
 
-$DataJs  = Join-Path $PSScriptRoot "war_data.js"
-$HtmlOut = Join-Path $PSScriptRoot "index.html"
+$DataJs  = "C:\Users\Ellie\Desktop\雅芳即時戰報\war_data.js"
+$HtmlOut = "C:\Users\Ellie\Desktop\雅芳即時戰報\war_report.html"
 
 # Auto-detect latest real time Excel on Desktop
 if (-not $XL) {
@@ -135,6 +135,65 @@ try {
     try { $wb.Close($false) } catch {}
     $app.Quit()
     [System.Runtime.Interopservices.Marshal]::ReleaseComObject($app) | Out-Null
+}
+
+# ── 自動更新計劃數據 plan_data.js ────────────────────
+$PlanJs = "C:\Users\Ellie\Desktop\雅芳即時戰報\plan_data.js"
+$planFile = Get-ChildItem "$PSScriptRoot" -Filter "*daily*Ellie*.xlsx" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($planFile) {
+    Write-Host "Updating plan_data from: $($planFile.Name)" -ForegroundColor Cyan
+    $app2 = New-Object -ComObject Excel.Application
+    $app2.Visible = $false; $app2.DisplayAlerts = $false
+    try {
+        $wb2 = $app2.Workbooks.Open($planFile.FullName)
+        # Find Y26MXX% sheet
+        $planSheet = $wb2.Worksheets | Where-Object { $_.Name -match "Y\d{2}M\d{2}%" } | Select-Object -First 1
+        if ($planSheet) {
+            $salesTgt   = try{[math]::Round([double]$planSheet.Cells(3,7).Value2)}catch{0}
+            $activeTgt  = try{[math]::Round([double]$planSheet.Cells(3,10).Value2)}catch{0}
+            $apptTgt    = try{[math]::Round([double]$planSheet.Cells(3,12).Value2)}catch{0}
+            $recruitTgt = try{[math]::Round([double]$planSheet.Cells(3,14).Value2)}catch{0}
+            $planRows = @()
+            for ($row = 4; $row -le 43; $row++) {
+                $date = $planSheet.Cells($row,2).Text
+                if ($date -eq "") { continue }
+                $wd    = $planSheet.Cells($row,1).Text
+                $day   = $planSheet.Cells($row,3).Text
+                $note  = ($planSheet.Cells($row,4).Text -replace "`r`n"," " -replace "`n"," " -replace "`r"," " -replace '"','\"').Trim()
+                $sDpRaw= $planSheet.Cells($row,5).Value2
+                $sMTRaw= $planSheet.Cells($row,6).Value2
+                $sDval = try{[math]::Round([double]$planSheet.Cells($row,7).Value2)}catch{0}
+                $aDpRaw= $planSheet.Cells($row,8).Value2
+                $aMTRaw= $planSheet.Cells($row,9).Value2
+                $aDval = try{[math]::Round([double]$planSheet.Cells($row,10).Value2)}catch{0}
+                function ConvPct($v){ if($v -and [double]$v -le 1 -and [double]$v -gt 0){[math]::Round([double]$v*100,1)}elseif($v){[math]::Round([double]$v,1)}else{0} }
+                $sdp=[math]::Round([double]$(try{ConvPct $sDpRaw}catch{0}),1)
+                $smt=[math]::Round([double]$(try{ConvPct $sMTRaw}catch{0}),1)
+                $adp=[math]::Round([double]$(try{ConvPct $aDpRaw}catch{0}),1)
+                $amt=[math]::Round([double]$(try{ConvPct $aMTRaw}catch{0}),1)
+                $isWD = if($wd -ne "") {"true"} else {"false"}
+                $planRows += "{`"wd`":`"$wd`",`"date`":`"$date`",`"day`":`"$day`",`"note`":`"$note`",`"isWD`":$isWD,`"sDailyPct`":$sdp,`"sCumPct`":$smt,`"sDailyVal`":$sDval,`"aDailyPct`":$adp,`"aCumPct`":$amt,`"aDailyVal`":$aDval}"
+            }
+            $nl2 = [System.Environment]::NewLine
+            $pjs  = "window.AVON_PLAN = {$nl2"
+            $monthStr = ($planFile.Name -replace '[^0-9]','').Substring(0,6)
+            $pjs += "  month: `"$monthStr`",$nl2"
+            $pjs += "  salesTarget:   $(if($salesTgt -gt 0){$salesTgt}else{47212759}),$nl2"
+            $pjs += "  activeTarget:  $(if($activeTgt -gt 0){$activeTgt}else{21060}),$nl2"
+            $pjs += "  apptTarget:    $(if($apptTgt -gt 0){$apptTgt}else{1110}),$nl2"
+            $pjs += "  recruitTarget: $(if($recruitTgt -gt 0){$recruitTgt}else{295}),$nl2"
+            $pjs += "  days: [$($planRows -join ",")]$nl2"
+            $pjs += "};$nl2"
+            [System.IO.File]::WriteAllText($PlanJs, $pjs, [System.Text.Encoding]::UTF8)
+            Write-Host "plan_data.js updated: $($planRows.Count) days" -ForegroundColor Green
+        }
+        $wb2.Close($false)
+    } finally {
+        $app2.Quit()
+        [System.Runtime.Interopservices.Marshal]::ReleaseComObject($app2) | Out-Null
+    }
+} else {
+    Write-Host "No daily plan file found in folder (skipping plan_data update)" -ForegroundColor Yellow
 }
 
 if (Test-Path $HtmlOut) {

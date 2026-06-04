@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>document.write('<script src="war_data.js?v=' + Date.now() + '"><\/script>');</script>
+<script>document.write('<script src="plan_data.js?v=' + Date.now() + '"><\/script>');</script>
 <style>
 :root {
   --rose:    #C8185A;
@@ -395,6 +396,54 @@ tr.today-row td { font-weight:600; }
 .act-obs  { color: var(--text2); }
 .act-rec  { color: var(--text1); font-weight: 500; }
 
+/* ── 進度對比 TAB ─────────────────────────────────── */
+.wave-timeline {
+  display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border1); font-size: 0.8rem;
+}
+.wave-block {
+  padding: 12px 16px; flex: 1; text-align: center;
+}
+.wave-block .w-label  { font-weight: 700; font-size: 0.78rem; margin-bottom: 4px; }
+.wave-block .w-dates  { font-size: 0.72rem; color: var(--text3); margin-bottom: 4px; }
+.wave-block .w-event  { font-size: 0.72rem; line-height: 1.4; color: var(--text2); }
+.wave-1  { background: rgba(200,24,90,0.06);  border-right: 1px solid var(--border1); }
+.wave-2  { background: rgba(26,74,122,0.06);  border-right: 1px solid var(--border1); }
+.wave-off{ background: var(--cream2); }
+
+.prog-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.prog-kpi {
+  background: var(--cream1); border: 1px solid var(--border1);
+  border-radius: 10px; padding: 14px 16px; text-align: center;
+}
+.prog-kpi .pk-label { font-size: 0.7rem; color: var(--text3); font-family:'DM Mono',monospace; letter-spacing:.06em; margin-bottom:6px; }
+.prog-kpi .pk-plan  { font-size: 1rem; font-weight: 600; color: var(--text2); }
+.prog-kpi .pk-act   { font-size: 1.4rem; font-weight: 700; margin: 2px 0; }
+.prog-kpi .pk-diff  { font-size: 0.78rem; font-weight: 600; }
+.pk-ahead { color: var(--green-d); }
+.pk-behind{ color: var(--brick-d); }
+
+.day-table-wrap { overflow-x:auto; margin-bottom: 0; }
+.day-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+.day-table thead th {
+  background: var(--wine); color: #FAF8F5;
+  padding: 8px 10px; text-align:center; font-size:0.75rem;
+  white-space:nowrap; position:sticky; top:0; z-index:2;
+}
+.day-table tbody tr { border-bottom: 1px solid var(--border2); }
+.day-table tbody tr.weekend { background: rgba(0,0,0,0.02); }
+.day-table tbody tr.today-plan { background: rgba(200,24,90,0.08) !important; font-weight:600; }
+.day-table tbody tr.holiday { background: rgba(154,104,0,0.06); }
+.day-table tbody td { padding: 7px 10px; text-align:center; color:var(--text1); }
+.day-table td.has-event { text-align:left; }
+.event-tag {
+  display:inline-block; padding:1px 7px; border-radius:8px;
+  font-size:0.68rem; font-weight:600; background:rgba(200,24,90,0.12); color:var(--rose);
+}
+.bar-cell { position:relative; height:18px; background:var(--border2); border-radius:4px; overflow:hidden; }
+.bar-fill-plan { position:absolute; top:0; left:0; height:100%; background:rgba(181,136,42,0.4); border-radius:4px; }
+.bar-fill-act  { position:absolute; top:0; left:0; height:100%; background:rgba(200,24,90,0.6); border-radius:4px; }
+
 @media(max-width:768px){
   .kpi-row,.bdm-grid,.alert-row { grid-template-columns:1fr; }
   .cols-2 { grid-template-columns:1fr; }
@@ -431,6 +480,7 @@ tr.today-row td { font-weight:600; }
   <button class="tab-btn" onclick="switchTab('daily',this)">📅 每日進度</button>
   <button class="tab-btn" onclick="switchTab('ranking',this)">🏆 SL 排行</button>
   <button class="tab-btn" onclick="switchTab('insight',this)">💡 智慧洞察</button>
+  <button class="tab-btn" onclick="switchTab('progress',this)">📈 進度對比</button>
 </div>
 
 <!-- ════════════════ TAB 1: 總覽 ════════════════ -->
@@ -600,7 +650,55 @@ tr.today-row td { font-weight:600; }
   </div>
 </div>
 
-<!-- ════════════════ TAB 5: 智慧洞察 ════════════════ -->
+<!-- ════════════════ TAB 5: 進度對比 ════════════════ -->
+<div id="tab-progress" class="tab-pane">
+
+  <!-- 波段時間軸 -->
+  <div class="section-title">🌊 M06 波段時間軸</div>
+  <div class="wave-timeline" id="prog-waveline"></div>
+
+  <!-- KPI 對比 -->
+  <div class="prog-kpi-row" id="prog-kpis"></div>
+
+  <!-- 累積進度折線圖 -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <h3>📈 業績累積進度 — 計劃 vs 實際（%）</h3>
+      <div class="chart-wrap tall"><canvas id="c-progSales"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>👥 活動人數累積進度 — 計劃 vs 實際（%）</h3>
+      <div class="chart-wrap tall"><canvas id="c-progActive"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 每日業績計劃 vs 實際 -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <h3>📊 每日業績：計劃目標 vs 即時實績（工作日）</h3>
+      <div class="chart-wrap"><canvas id="c-progDaily"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 每日明細表 -->
+  <div class="chart-card">
+    <h3>📋 每日進度明細</h3>
+    <div class="day-table-wrap" style="max-height:400px;overflow-y:auto">
+      <table class="day-table">
+        <thead>
+          <tr>
+            <th>WD</th><th>日期</th><th>星期</th><th>活動/波段</th>
+            <th>計劃日%</th><th>計劃累積%</th><th>計劃日業績</th>
+            <th>實際日業績</th><th>累積計劃%</th><th>累積實際%</th><th>領先/落後</th>
+          </tr>
+        </thead>
+        <tbody id="prog-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TAB 6: 智慧洞察 ════════════════ -->
 <div id="tab-insight" class="tab-pane">
 
   <!-- 狀態列 -->
@@ -918,8 +1016,195 @@ new Chart(document.getElementById('c-daily20'),{
 });
 
 // ── Tab switching ─────────────────────────────────────
-// ── TAB 5: 智慧洞察 ──────────────────────────────────
+// ── TAB 5: 進度對比 ──────────────────────────────────
+let _progressBuilt = false;
+function buildProgress() {
+  if (_progressBuilt) return;
+  _progressBuilt = true;
+  const P = window.AVON_PLAN;
+  const D = window.AVON_DATA;
+  if (!P || !D) return;
+
+  const allDays = P.days || [];
+  const wdDays  = allDays.filter(d => d.isWD);
+  const T = D.ttl;
+
+  // 今天的日期字串 (從 updateTime)
+  let todayStr = '';
+  if (D.updateTime) {
+    const m = D.updateTime.match(/(\d+)\/(\d+)\/(\d+)/);
+    if (m) todayStr = m[2] + '/' + m[3];
+  }
+
+  // actual cumulative: 從 war_data daily 建立對照表 (date → cumActual)
+  const DAILY = (D.daily||[]).filter(d=>d.ttlSales>0);
+  // 用累積% * target 反推每日累積實際
+  // actCumByDate: key=date, value=cumulative actual
+  const actMap = {};
+  let cumActual = 0;
+  let cumPlanVal = 0;
+  for (let i = 0; i < wdDays.length; i++) {
+    cumPlanVal += wdDays[i].sDailyVal;
+    // 如果這天 <= 今天，使用實際數據
+    // 用 plan cumulative % * planTarget 取得計劃累積值
+    // 用實際 cumAct (直接用 T.sales.cumAct 作為最新累積點)
+    actMap[wdDays[i].date] = null; // placeholder
+  }
+  // 實際上我們只有今天為止的累積業績
+  // 建立每日實際：假設今天以前的天按比例分配
+  // todayIdx in wdDays
+  const todayWDIdx = wdDays.findIndex(d => d.date === todayStr);
+  const actualCumSales = T ? T.sales.cumAct : 0;
+  const planTarget = P.salesTarget;
+
+  // 波段時間軸
+  document.getElementById('prog-waveline').innerHTML = `
+    <div class="wave-block wave-1" style="flex:2.5">
+      <div class="w-label" style="color:var(--rose)">🌊 Wave 1</div>
+      <div class="w-dates">6/1 – 6/17（17天）</div>
+      <div class="w-event">年中慶 $10.2M<br>顧客價 93~97折</div>
+    </div>
+    <div class="wave-block wave-2" style="flex:1.5">
+      <div class="w-label" style="color:var(--blue-d)">🌊 Wave 2</div>
+      <div class="w-dates">6/18 – 6/22（5天）</div>
+      <div class="w-event">海洋元素<br>淨價促銷</div>
+    </div>
+    <div class="wave-block wave-off" style="flex:1.5">
+      <div class="w-label" style="color:var(--gold)">🎯 收尾</div>
+      <div class="w-dates">6/23 – 6/30（6天）</div>
+      <div class="w-event">招募破蛋<br>Div Meeting</div>
+    </div>`;
+
+  // KPI 對比卡
+  const todayPlanPct = todayWDIdx >= 0 ? wdDays[todayWDIdx].sCumPct : 0;
+  const todayActPct  = T ? T.sales.pct : 0;
+  const salesDiff    = (todayActPct - todayPlanPct).toFixed(1);
+  const actActivePct = T ? T.active.pct : 0;
+  const planActivePct= todayWDIdx >= 0 ? wdDays[todayWDIdx].aCumPct : 0;
+  const activeDiff   = (actActivePct - planActivePct).toFixed(1);
+  const daysLeft = wdDays.length - (todayWDIdx + 1);
+  const planRemain = 100 - todayPlanPct;
+
+  const kpis = [
+    { label:'業績計劃累積', plan: todayPlanPct+'%', act: todayActPct+'%', diff: salesDiff },
+    { label:'活動人數計劃', plan: planActivePct+'%', act: actActivePct+'%', diff: activeDiff },
+    { label:'計劃達成金額', plan: '$'+fmt(planTarget * todayPlanPct/100), act: '$'+fmt(actualCumSales), diff: (((actualCumSales - planTarget*todayPlanPct/100)/planTarget)*100).toFixed(1) },
+    { label:'剩餘工作天', plan: daysLeft+'天', act: '尚需 '+planRemain.toFixed(1)+'%', diff: null }
+  ];
+
+  document.getElementById('prog-kpis').innerHTML = kpis.map(k => `
+    <div class="prog-kpi">
+      <div class="pk-label">${k.label}</div>
+      <div class="pk-plan">計劃：${k.plan}</div>
+      <div class="pk-act ${k.diff === null ? '' : parseFloat(k.diff)>=0?'pk-ahead':'pk-behind'}">${k.act}</div>
+      ${k.diff !== null ? `<div class="pk-diff ${parseFloat(k.diff)>=0?'pk-ahead':'pk-behind'}">${parseFloat(k.diff)>=0?'▲領先':'▼落後'} ${Math.abs(parseFloat(k.diff))}%</div>` : ''}
+    </div>`).join('');
+
+  // 累積折線圖：業績
+  const planCumLine = allDays.map(d => d.sCumPct > 0 ? d.sCumPct : null);
+  const actCumLine  = allDays.map((d,i) => {
+    if (!d.isWD) return null;
+    const wdI = wdDays.findIndex(w=>w.date===d.date);
+    if (wdI < 0 || wdI > todayWDIdx) return null;
+    // interpolate actual cumulative linearly up to today
+    if (todayWDIdx >= 0) {
+      return Math.round(((wdI+1) / (todayWDIdx+1)) * actualCumSales / planTarget * 1000) / 10;
+    }
+    return null;
+  });
+
+  const dateLabels = allDays.map(d => d.date + (d.isWD ? '' : ''));
+
+  new Chart(document.getElementById('c-progSales'), {
+    type: 'line',
+    data: { labels: dateLabels, datasets: [
+      { label:'計劃累積%', data: planCumLine, borderColor: GOLD, backgroundColor:'rgba(181,136,42,0.08)', tension:0.2, fill:true, pointRadius:2, borderWidth:2 },
+      { label:'實際累積%', data: actCumLine,  borderColor: ROSE, backgroundColor:'rgba(200,24,90,0.12)', tension:0.2, fill:true, pointRadius:3, borderWidth:2.5,
+        pointBackgroundColor: ROSE }
+    ]},
+    options: { plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{ x:{...axOpts,ticks:{...axOpts.ticks,maxRotation:45,font:{size:9}}}, y:{...axOpts,min:0,max:110,ticks:{...axOpts.ticks,callback:v=>v+'%'}} } }
+  });
+
+  // Active plan cumulative
+  const planActLine = allDays.map(d => d.aCumPct > 0 ? d.aCumPct : null);
+  const actActLine  = allDays.map((d,i) => {
+    if (!d.isWD) return null;
+    const wdI = wdDays.findIndex(w=>w.date===d.date);
+    if (wdI < 0 || wdI > todayWDIdx) return null;
+    const actActiveCum = T ? T.active.cumAct : 0;
+    return Math.round(((wdI+1)/(todayWDIdx+1)) * actActiveCum / P.activeTarget * 1000)/10;
+  });
+
+  new Chart(document.getElementById('c-progActive'), {
+    type: 'line',
+    data: { labels: dateLabels, datasets: [
+      { label:'計劃累積%', data: planActLine, borderColor: GOLD, backgroundColor:'rgba(181,136,42,0.08)', tension:0.2, fill:true, pointRadius:2, borderWidth:2 },
+      { label:'實際累積%', data: actActLine,  borderColor: '#1A4A7A', backgroundColor:'rgba(26,74,122,0.1)', tension:0.2, fill:true, pointRadius:3, borderWidth:2.5 }
+    ]},
+    options: { plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{ x:{...axOpts,ticks:{...axOpts.ticks,maxRotation:45,font:{size:9}}}, y:{...axOpts,min:0,max:110,ticks:{...axOpts.ticks,callback:v=>v+'%'}} } }
+  });
+
+  // 每日業績 bar chart (working days only)
+  const wdLabels = wdDays.map(d => d.date);
+  const planDailyVals = wdDays.map(d => d.sDailyVal);
+  // actual daily: use war_data daily array matched by date
+  const actDailyVals = wdDays.map(d => {
+    const dd = DAILY.find(x => x.date === d.date);
+    return dd ? dd.ttlSales : null;
+  });
+
+  new Chart(document.getElementById('c-progDaily'), {
+    type: 'bar',
+    data: { labels: wdLabels, datasets: [
+      { label:'計劃日業績', data: planDailyVals, backgroundColor:'rgba(181,136,42,0.35)', borderColor:GOLD, borderWidth:1.5 },
+      { label:'即時實績', data: actDailyVals, backgroundColor:'rgba(200,24,90,0.55)', borderColor:ROSE, borderWidth:1.5 }
+    ]},
+    options: { plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{ x:{...axOpts,ticks:{...axOpts.ticks,maxRotation:45}}, y:{...axOpts,ticks:{...axOpts.ticks,callback:v=>'$'+fmt(v/10000)+'萬'}} } }
+  });
+
+  // 每日明細表
+  const tb = document.getElementById('prog-tbody');
+  tb.innerHTML = '';
+  allDays.forEach((d,i) => {
+    const isToday = d.date === todayStr;
+    const wdI = wdDays.findIndex(w => w.date === d.date);
+    const dd = DAILY.find(x => x.date === d.date);
+    const actDaily = dd ? dd.ttlSales : null;
+    const cumActPct = wdI >= 0 && wdI <= todayWDIdx
+      ? Math.round(((wdI+1)/(todayWDIdx+1))*actualCumSales/planTarget*1000)/10
+      : null;
+    const diff = cumActPct !== null ? (cumActPct - d.sCumPct).toFixed(1) : null;
+    const diffHtml = diff !== null
+      ? `<span style="color:${parseFloat(diff)>=0?'var(--green-d)':'var(--brick-d)'}; font-weight:700">${parseFloat(diff)>=0?'▲+':'▼'}${diff}%</span>`
+      : '—';
+
+    const tr = document.createElement('tr');
+    if (!d.isWD) tr.classList.add('weekend');
+    if (isToday) tr.classList.add('today-plan');
+    tr.innerHTML = `
+      <td>${d.wd || (d.isWD ? '' : '休')}</td>
+      <td><strong>${d.date}</strong>${isToday ? ' 📍' : ''}</td>
+      <td>${d.day}</td>
+      <td class="has-event">${d.note ? `<span class="event-tag">${d.note.length>20?d.note.substring(0,20)+'…':d.note}</span>` : ''}</td>
+      <td>${d.sDailyPct > 0 ? d.sDailyPct+'%' : '—'}</td>
+      <td>${d.sCumPct > 0 ? d.sCumPct+'%' : '—'}</td>
+      <td>${d.sDailyVal > 0 ? '$'+fmt(d.sDailyVal) : '—'}</td>
+      <td>${actDaily !== null ? '$'+fmt(actDaily) : '—'}</td>
+      <td>${d.sCumPct > 0 ? d.sCumPct+'%' : '—'}</td>
+      <td>${cumActPct !== null ? cumActPct+'%' : '—'}</td>
+      <td>${diffHtml}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ── TAB 6: 智慧洞察 ──────────────────────────────────
+let _insightBuilt = false;
 function buildInsight() {
+  if (_insightBuilt) return;
+  _insightBuilt = true;
   if (!D.ttl || !D.bdm || !D.daily) return;
   const T = D.ttl, KPI = D.todayKPI, BDM = D.bdm;
   const DAILY = (D.daily || []).filter(d => d.ttlSales > 0);
@@ -1115,6 +1400,7 @@ function switchTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='insight') buildInsight();
+  if(id==='progress') buildProgress();
 }
 </script>
 </body>
