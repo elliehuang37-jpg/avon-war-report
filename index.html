@@ -932,12 +932,21 @@ DAILY.forEach(d=>{
 });
 
 // ── TAB 4: SL Ranking ────────────────────────────────
+function hasRepName(r){
+  return r && r.name && r.name.trim() && r.name.trim() !== '#';
+}
+function repLabel(r){
+  if (hasRepName(r)) return r.name;
+  return [r.zone, r.family].filter(Boolean).join(' ') || '未命名';
+}
+const rankedReps = REPS.filter(r => r.target > 0 && hasRepName(r));
+
 // Alert stats
 const slBox=document.getElementById('slAlerts');
-const over=REPS.filter(r=>r.pct>=100).length;
-const m8599=REPS.filter(r=>r.pct>=85&&r.pct<100).length;
-const m5084=REPS.filter(r=>r.pct>=50&&r.pct<85).length;
-const u50=REPS.filter(r=>r.pct<50).length;
+const over=rankedReps.filter(r=>r.pct>=100).length;
+const m8599=rankedReps.filter(r=>r.pct>=85&&r.pct<100).length;
+const m5084=rankedReps.filter(r=>r.pct>=50&&r.pct<85).length;
+const u50=rankedReps.filter(r=>r.pct<50).length;
 slBox.innerHTML=`
   <div class="alert-box good"><div class="alert-icon">✅</div><div><div class="alert-label">已達標 ≥100%</div><div class="alert-val">${over} 人</div></div></div>
   <div class="alert-box info"><div class="alert-icon">⚡</div><div><div class="alert-label">85–99% 衝刺區</div><div class="alert-val">${m8599} 人</div></div></div>
@@ -953,16 +962,8 @@ function statusTag(p){
 }
 
 let curFilter='all', curSearch='';
-function hasRepName(r){
-  return r && r.name && r.name.trim() && r.name.trim() !== '#';
-}
-function repLabel(r){
-  if (hasRepName(r)) return r.name;
-  return [r.zone, r.family].filter(Boolean).join(' ') || '未命名';
-}
-const rankedReps = REPS.filter(r => r.target > 0 && hasRepName(r));
 function renderReps(){
-  let data=[...REPS].sort((a,b)=>b.pct-a.pct);
+  let data=[...rankedReps].sort((a,b)=>b.pct-a.pct);
   if(curFilter==='A') data=data.filter(r=>r.div==='A');
   else if(curFilter==='B') data=data.filter(r=>r.div==='B');
   else if(curFilter==='C') data=data.filter(r=>r.div==='C');
@@ -1273,10 +1274,9 @@ function buildInsight() {
   const gap01 = Math.abs(BDM.sales.pct[bestSIdx] - BDM.sales.pct[worstSIdx]).toFixed(1);
 
   // SL分析
-  const REPS = D.reps || [];
-  const overReps  = REPS.filter(r => r.pct >= 100);
-  const under50   = REPS.filter(r => r.pct < 50);
-  const zeroDay   = REPS.filter(r => r.dayActual === 0);
+  const overReps  = rankedReps.filter(r => r.pct >= 100);
+  const under50   = rankedReps.filter(r => r.pct < 50);
+  const zeroDay   = rankedReps.filter(r => r.dayActual === 0);
   const top3 = [...rankedReps].sort((a,b) => b.dayActual - a.dayActual).slice(0,3);
 
   const fmt  = n => new Intl.NumberFormat('zh-TW').format(Math.round(n));
@@ -1344,9 +1344,9 @@ function buildInsight() {
       color: 'blue',
       icon: '👥',
       title: 'SL 戰力分析',
-      body: `190 位 SL 中，<strong>${overReps.length} 人已達標（${Math.round(overReps.length/REPS.length*100)}%）</strong>。` +
+      body: `${rankedReps.length} 位有效 SL 中，<strong>${overReps.length} 人已達標（${Math.round(overReps.length/rankedReps.length*100)}%）</strong>。` +
             `${under50.length} 人達成率未達 50%，需要重點關注。` +
-            `今日零業績 ${zeroDay.length} 人（${Math.round(zeroDay.length/REPS.length*100)}%）。` +
+            `今日零業績 ${zeroDay.length} 人（${Math.round(zeroDay.length/rankedReps.length*100)}%）。` +
             `今日業績王：<strong>${top3[0] ? repLabel(top3[0]) : '—'}（${fmtM(top3[0]?.dayActual||0)}）</strong>。`
     }
   ];
