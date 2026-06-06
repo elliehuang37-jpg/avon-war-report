@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AVON Taiwan 香氛顧問</title>
+  <meta name="theme-color" content="#C8185A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AVON 香氛顧問">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <style>
+    :root {
+      --avon: #c8185a;
+      --plum: #5d173d;
+      --gold: #b5882a;
+      --ink: #251821;
+      --muted: #705f68;
+      --cream: #f7f1ec;
+      --paper: #fffaf7;
+      --line: #e6d8d0;
+      --green: #2d6a4f;
+      --blue: #1a3a5c;
+      --shadow: 0 12px 30px rgba(93, 23, 61, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+    }
+    img { max-width: 100%; display: block; }
+    button { font: inherit; }
+    .app {
+      min-height: 100vh;
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.04);
+    }
+    .hero {
+      min-height: 210px;
+      padding: 22px 18px 16px;
+      color: white;
+      background:
+        linear-gradient(180deg, rgba(37,24,33,.28), rgba(93,23,61,.88)),
+        url("./assets/all-p01-01.png") center/cover;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .brand {
+      width: fit-content;
+      padding: 5px 12px;
+      background: rgba(255,255,255,.96);
+      color: var(--avon);
+      letter-spacing: 4px;
+      font-family: Georgia, serif;
+      font-weight: 700;
+      font-size: 18px;
+      border-radius: 3px;
+      margin-bottom: 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+    .hero p {
+      margin: 0;
+      color: rgba(255,255,255,.86);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav button {
+      min-height: 52px;
+      border: 0;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .nav button.active {
+      color: var(--avon);
+      box-shadow: inset 0 -3px 0 var(--avon);
+    }
+    .page { display: none; padding: 18px 14px 96px; }
+    .page.active { display: block; }
+    .page-head { margin: 0 4px 14px; }
+    .eyebrow {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 4px 0 7px;
+      color: var(--plum);
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    .page-head p, .small {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(93,23,61,.06);
+    }
+    .product {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      min-height: 176px;
+    }
+    .product-media {
+      background: #f6f0ec;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      border-right: 1px solid var(--line);
+    }
+    .product-media img {
+      max-height: 150px;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+    }
+    .product-body { padding: 13px 12px 12px; }
+    .tagline {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 7px;
+    }
+    .pill {
+      border: 1px solid rgba(181,136,42,.35);
+      background: #fff8e8;
+      color: #7a5010;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .pill.green { background: #e8f5ee; color: var(--green); border-color: rgba(45,106,79,.25); }
+    .pill.blue { background: #e8f0fa; color: var(--blue); border-color: rgba(26,58,92,.22); }
+    .product h3 {
+      margin: 0 0 5px;
+      color: var(--plum);
+      font-size: 17px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+    .notes {
+      margin: 7px 0 9px;
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .price {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      color: var(--avon);
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .price span {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-decoration: line-through;
+    }
+    .quiz-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .progress {
+      height: 7px;
+      background: #eadfd8;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--avon), var(--gold));
+      transition: width .25s ease;
+    }
+    .question-count {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .question {
+      margin: 0 0 14px;
+      font-size: 21px;
+      line-height: 1.28;
+      color: var(--plum);
+      letter-spacing: 0;
+    }
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+    .option {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf7;
+      color: var(--ink);
+      padding: 13px 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .option strong {
+      display: block;
+      color: var(--plum);
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+    .option span {
+      display: block;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .option.selected {
+      border-color: var(--avon);
+      box-shadow: 0 0 0 2px rgba(200,24,90,.12);
+      background: #fff3f7;
+    }
+    .quiz-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .primary, .secondary {
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary {
+      border: 0;
+      background: var(--avon);
+      color: white;
+    }
+    .primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .secondary {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--plum);
+    }
+    .result-summary {
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #ead7ad;
+      background: #fff8e8;
+      margin-bottom: 12px;
+    }
+    .result-summary h3 {
+      margin: 0 0 6px;
+      color: var(--plum);
+      font-size: 19px;
+    }
+    .bottom-cta {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(492px, calc(100vw - 28px));
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .bottom-cta button {
+      pointer-events: auto;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 10px;
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(93,23,61,.22);
+      cursor: pointer;
+    }
+    .bottom-cta .quiz-jump { background: var(--plum); }
+    .bottom-cta .result-jump { background: var(--green); }
+    @media (min-width: 470px) {
+      .page { padding-left: 18px; padding-right: 18px; }
+      .product { grid-template-columns: 132px 1fr; }
+      .product-media img { max-height: 164px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="brand">AVON</div>
+      <h1>台灣雅芳香氛顧問</h1>
+    </section>
+
+    <nav class="nav" aria-label="香水分類">
+      <button class="active" data-tab="fresh">花果清新</button>
+      <button data-tab="floral">柔美花香</button>
+      <button data-tab="warm">東方木質</button>
+      <button data-tab="other">其他香氛</button>
+      <button data-tab="quiz">香氛測驗</button>
+    </nav>
+
+    <section id="fresh" class="page active"></section>
+    <section id="floral" class="page"></section>
+    <section id="warm" class="page"></section>
+    <section id="other" class="page"></section>
+    <section id="quiz" class="page"></section>
+  </main>
+
+  <div class="bottom-cta">
+    <button class="quiz-jump" data-tab-jump="quiz">開始測驗</button>
+    <button class="result-jump" id="resultJump" data-tab-jump="quiz">查看推薦</button>
+  </div>
+
+  <script>
+    const products = [
+      {
+        id: "little-black-dress", category: "floral", name: "經典黑色小洋裝香水",
+        image: "./assets/all-p02-04.png", family: "花香麝香調", mood: ["elegant", "date", "office"],
+        notes: { top: "柑橘、粉紅胡椒", middle: "茉莉花、玫瑰、鳶尾花", base: "琥珀、香水草" },
+        price: "優惠價 800 元", original: "推薦售價 970 元",
+        intro: "俐落、精緻、帶一點神秘感，適合想留下成熟印象的人。"
+      },
+      {
+        id: "lace-dress", category: "floral", name: "黑色蕾絲小洋裝香水",
+        image: "./assets/all-p02-06.png", family: "東方花香調", mood: ["elegant", "date", "warm"],
+        notes: { top: "杏子花、非洲薑花、櫻草", middle: "粉牡丹、依蘭花、梔子花", base: "白麝香、乳木香" },
+        price: "優惠價 800 元", original: "推薦售價 970 元",
+        intro: "比經典款更柔軟嫵媚，適合晚宴、約會或想增加女人味的時刻。"
+      },
+      {
+        id: "pink", category: "fresh", name: "粉紅心情淡香水",
+        image: "./assets/all-p03-12.png", family: "花果木質調", mood: ["fresh", "daily", "young"],
+        notes: { top: "蜜桃、百香果、小蒼蘭", middle: "牡丹、木蘭花、鈴蘭", base: "琥珀、檀木、白麝香" },
+        price: "優惠價 550 元", original: "推薦售價 645 元",
+        intro: "甜美但不厚重，是第一次買香水或日常外出的好入門。"
+      },
+      {
+        id: "peony", category: "floral", name: "典藏牡丹淡香精",
+        image: "./assets/all-p03-11.png", family: "花果木質調", mood: ["romantic", "daily", "soft"],
+        notes: { top: "覆盆子、佛手柑、粉紅胡椒", middle: "含羞草、牡丹、茉莉", base: "大溪地梔子花、白麝香、檀香" },
+        price: "優惠價 800 元", original: "推薦售價 970 元",
+        intro: "花香乾淨明亮，帶一點細緻木質尾韻，適合溫柔優雅型。"
+      },
+      {
+        id: "moon", category: "warm", name: "月夜之美淡香精",
+        image: "./assets/all-p04-18.png", family: "經典東方花香調", mood: ["date", "warm", "bold"],
+        notes: { top: "野生櫻桃、粉紅胡椒、黑莓", middle: "清新果香、月光花、夜來香", base: "香草、檀香" },
+        price: "優惠價 950 元", original: "推薦售價 1150 元",
+        intro: "甜潤、濃郁、記憶點強，適合夜晚場合或想被記住的時候。"
+      },
+      {
+        id: "dream", category: "warm", name: "逐夢經典女香",
+        image: "./assets/all-p04-17.png", family: "東方花香調", mood: ["classic", "office", "warm"],
+        notes: { top: "小蒼蘭", middle: "茉莉花", base: "馬達加斯加香草" },
+        price: "優惠價 980 元", original: "推薦售價 1150 元",
+        intro: "簡潔花香配香草底，給人穩定、成熟、可信賴的感覺。"
+      },
+      {
+        id: "radiance", category: "warm", name: "璀璨光采淡香精",
+        image: "./assets/all-p05-22.png", family: "東方美食調", mood: ["bold", "date", "warm"],
+        notes: { top: "粉紅胡椒、荔枝、覆盆莓", middle: "玫瑰、紫羅蘭、梔子花", base: "金麝香、零陵香豆、香草" },
+        price: "優惠價 980 元", original: "推薦售價 1150 元",
+        intro: "甜美、閃耀、有存在感，適合派對、拍照與節慶穿搭。"
+      },
+      {
+        id: "butterfly", category: "fresh", name: "彩蝶花舞淡香精",
+        image: "./assets/all-p06-27.png", family: "花果調", mood: ["fresh", "daily", "young"],
+        notes: { top: "蘋果、柑橘、甜桃", middle: "蝴蝶花、花香、梔子花", base: "雪松木、琥珀、檀香" },
+        price: "優惠價 980 元", original: "推薦售價 1150 元",
+        intro: "果香開場很有活力，後段帶乾淨木質，適合白天外出。"
+      },
+      {
+        id: "green", category: "fresh", name: "綠意真情淡香精",
+        image: "./assets/all-p06-29.png", family: "花果木質調", mood: ["fresh", "office", "nature"],
+        notes: { top: "楊桃、黑加侖、紅石榴", middle: "粉紅小蒼蘭、梔子花、粉紅牡丹", base: "麝香、琥珀、雪松木" },
+        price: "優惠價 980 元", original: "推薦售價 1150 元",
+        intro: "清爽、明亮、帶綠意，適合通勤與不想太甜的日常。"
+      },
+      {
+        id: "floral-story", category: "fresh", name: "花漾情緣淡香精",
+        image: "./assets/all-p07-34.png", family: "花果木質調", mood: ["romantic", "daily", "fresh"],
+        notes: { top: "佛手柑、百香果、粉紅胡椒", middle: "玫瑰、玉蘭花", base: "白麝香、雪松、喀什米爾木" },
+        price: "優惠價 980 元", original: "推薦售價 1150 元",
+        intro: "花果香有透明感，尾韻乾淨，適合溫柔但不想太甜的人。"
+      },
+      {
+        id: "today", category: "floral", name: "今日淡香精",
+        image: "./assets/all-p08-39.png", family: "花香調", mood: ["classic", "office", "elegant"],
+        notes: { top: "橙花、小蒼蘭、仙人掌", middle: "蝴蝶樹叢、洛神花、橘樹花", base: "檀香木、雪松油、麝香" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "清楚、優雅、耐聞，是上班、拜訪客戶或正式場合的安全選擇。"
+      },
+      {
+        id: "tomorrow", category: "warm", name: "明日淡香精",
+        image: "./assets/all-p08-40.png", family: "東方木質調", mood: ["warm", "classic", "date"],
+        notes: { top: "橙花、水蜜桃、蔓越莓", middle: "萬壽菊、非洲紫羅蘭、廣藿香", base: "香草、麝香、琥珀" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "溫暖柔和、尾韻有安全感，適合想要親近感的穿香。"
+      },
+      {
+        id: "cherish", category: "floral", name: "恆久珍愛淡香精",
+        image: "./assets/all-p03-11.png", family: "花香調", mood: ["soft", "romantic", "daily"],
+        notes: { top: "杏仁牛奶、花香", middle: "橙花", base: "麝香" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "柔軟、乾淨、帶親膚感，像低調但細緻的日常陪伴。"
+      },
+      {
+        id: "rose", category: "floral", name: "遇見玫好淡香精",
+        image: "./assets/all-p09-45.png", family: "花香調", mood: ["romantic", "date", "elegant"],
+        notes: { top: "粉紅胡椒、香檸檬、草莓", middle: "柳橙花、玫瑰精油、百合花", base: "岩蘭草、檀香、麝香" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "玫瑰感明確但不老派，適合想要浪漫印象的人。"
+      },
+      {
+        id: "tuberose-cocoa", category: "warm", name: "夜來香可可淡香精",
+        image: "./assets/all-p10-51.png", family: "花香木質調", mood: ["bold", "warm", "date"],
+        notes: { top: "花椒、生薑、水果香調", middle: "黃金薑黃、木蘭花、印度夜來香", base: "可可殼、岩蘭草、莎草" },
+        price: "優惠價 680 元", original: "推薦售價 800 元",
+        intro: "花香搭配可可與辛香，個性鮮明，適合喜歡特殊香氣的人。"
+      },
+      {
+        id: "gin-bamboo", category: "fresh", name: "琴酒醉上竹淡香精",
+        image: "./assets/all-p10-54.png", family: "柑橘花香調", mood: ["fresh", "office", "nature"],
+        notes: { top: "佛手柑、竹葉清露、檸檬", middle: "杜松子琴酒、白茶、茉莉", base: "馬黛茶、龍涎香、廣藿香" },
+        price: "優惠價 680 元", original: "推薦售價 800 元",
+        intro: "清透柑橘與茶感，乾淨俐落，適合中性、清爽取向。"
+      },
+      {
+        id: "pepper-peach", category: "fresh", name: "胡椒撩上桃淡香精",
+        image: "./assets/all-p11-57.png", family: "花果調", mood: ["young", "date", "fresh"],
+        notes: { top: "天鵝絨桃、粉紅胡椒、佛手柑皮", middle: "桂花、玫瑰花瓣、白水仙", base: "安息香、香草糖、零陵香豆" },
+        price: "優惠價 680 元", original: "推薦售價 800 元",
+        intro: "桃子甜香加胡椒轉折，活潑又有一點俏皮性感。"
+      },
+      {
+        id: "earth-woman", category: "fresh", name: "地球女人心淡香精",
+        image: "./assets/all-p11-58.png", family: "花香木質調", mood: ["nature", "office", "soft"],
+        notes: { top: "佛手柑、甜橙、無花果", middle: "茉莉、中國月桂、蘋果花", base: "檀香木、琥珀、麝香" },
+        price: "優惠價 680 元", original: "推薦售價 800 元",
+        intro: "明亮果香與溫柔木質平衡，適合自然、舒服、不張揚的形象。"
+      },
+      {
+        id: "lasting", category: "warm", name: "恆久淡香精",
+        image: "./assets/all-p13-64.png", family: "花果調", mood: ["classic", "daily", "warm"],
+        notes: { top: "橙花、佛手柑油、烏梅", middle: "柑橘、白牡丹、玫瑰", base: "杏桃、檀香、香草" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "花果香中帶溫潤甜感，適合喜歡親切、穩定氣質的人。"
+      },
+      {
+        id: "gentleman", category: "warm", name: "溫柔暖男淡香水",
+        image: "./assets/all-p14-67.png", family: "芳香薰苔調", mood: ["office", "classic", "warm"],
+        notes: { top: "橙花", middle: "香草、香橙花", base: "香根草" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "乾淨穩重、有親和力，適合男性或喜歡中性暖調的人。"
+      },
+      {
+        id: "true-love", category: "fresh", name: "真情真意淡香精",
+        image: "./assets/all-p14-69.png", family: "花果調", mood: ["fresh", "daily", "soft"],
+        notes: { top: "芭樂、西瓜、粉紅葡萄柚", middle: "茉莉花、雞蛋花、鳶尾草根", base: "麝香、柚木麝香、琥珀" },
+        price: "優惠價 900 元", original: "推薦售價 1060 元",
+        intro: "水果香氣清亮可愛，帶柔和花香與乾淨麝香，適合日常親切印象。"
+      },
+      {
+        id: "black-dress-spray", category: "other", kind: "other", name: "經典黑色小洋裝香水噴霧瓶",
+        image: "./assets/all-p02-09.png", family: "噴霧瓶", mood: [],
+        notes: { top: "10ml / 貨號 58015", middle: "經典黑色小洋裝香水同香氣", base: "適合外出補香、包包隨身攜帶" },
+        price: "優惠價 290 元", original: "推薦售價 340 元",
+        intro: "精巧容量，適合先試香或旅行、通勤補香。"
+      },
+      {
+        id: "radiance-spray", category: "other", kind: "other", name: "璀璨光采淡香精噴霧瓶",
+        image: "./assets/all-p05-24.png", family: "噴霧瓶", mood: [],
+        notes: { top: "10ml / 貨號 72001", middle: "璀璨光采淡香精同香氣", base: "適合派對、約會前快速補香" },
+        price: "優惠價 290 元", original: "推薦售價 340 元",
+        intro: "把甜美閃耀的東方美食調縮成隨身版，方便加強存在感。"
+      },
+      {
+        id: "radiance-lotion", category: "other", kind: "other", name: "璀璨光采香體乳",
+        image: "./assets/all-p05-23.png", family: "香體乳", mood: [],
+        notes: { top: "125ml / 貨號 74023", middle: "可與璀璨光采淡香精疊擦", base: "適合沐浴後保養與延長留香" },
+        price: "優惠價 260 元", original: "推薦售價 300 元",
+        intro: "帶有同系列香氣的身體乳，適合想讓香味更柔和貼膚的人。"
+      },
+      {
+        id: "butterfly-lotion", category: "other", kind: "other", name: "彩蝶花舞香體乳",
+        image: "./assets/all-p06-28.png", family: "香體乳", mood: [],
+        notes: { top: "125ml / 貨號 65711", middle: "彩蝶花舞淡香精同系列", base: "適合白天、出遊、輕盈花果香疊擦" },
+        price: "優惠價 260 元", original: "推薦售價 300 元",
+        intro: "明亮花果香的保養延伸，讓日常香氣更自然。"
+      },
+      {
+        id: "floral-story-lotion", category: "other", kind: "other", name: "花漾情緣香體乳",
+        image: "./assets/all-p07-35.png", family: "香體乳", mood: [],
+        notes: { top: "125ml / 貨號 03202", middle: "花漾情緣淡香精同系列", base: "適合溫柔花果香與睡前保養" },
+        price: "優惠價 260 元", original: "推薦售價 300 元",
+        intro: "以柔和花香包覆肌膚，適合和淡香精一起做香氣層次。"
+      },
+      {
+        id: "today-spray", category: "other", kind: "other", name: "今日淡香精噴霧瓶",
+        image: "./assets/all-p08-41.png", family: "噴霧瓶", mood: [],
+        notes: { top: "10ml / 貨號 67989", middle: "今日淡香精同香氣", base: "適合上班、會議前補香" },
+        price: "優惠價 290 元", original: "推薦售價 340 元",
+        intro: "正式場合友善的小容量版本，讓優雅花香隨身備著。"
+      },
+      {
+        id: "cherish-spray", category: "other", kind: "other", name: "恆久珍愛淡香精噴霧瓶",
+        image: "./assets/all-p09-43.png", family: "噴霧瓶", mood: [],
+        notes: { top: "10ml / 貨號 10346", middle: "恆久珍愛淡香精同香氣", base: "適合柔和親膚香氣補香" },
+        price: "優惠價 290 元", original: "推薦售價 340 元",
+        intro: "柔軟花香的小容量選擇，適合第一次接觸恆久珍愛的人。"
+      },
+      {
+        id: "rose-spray", category: "other", kind: "other", name: "遇見玫好淡香精噴霧瓶",
+        image: "./assets/all-p09-47.png", family: "噴霧瓶", mood: [],
+        notes: { top: "10ml / 貨號 03882", middle: "遇見玫好淡香精同香氣", base: "適合約會、晚餐前補香" },
+        price: "優惠價 290 元", original: "推薦售價 340 元",
+        intro: "玫瑰花香的隨身版，適合想要浪漫印象的補香需求。"
+      },
+      {
+        id: "tuberose-cocoa-wash", category: "other", kind: "other", name: "夜來香可可香水沐浴精",
+        image: "./assets/all-p10-50.png", family: "香水沐浴精", mood: [],
+        notes: { top: "150ml / 貨號 11281", middle: "夜來香可可淡香精同系列", base: "適合沐浴時先鋪上花香木質底韻" },
+        price: "優惠價 300 元", original: "推薦售價 350 元",
+        intro: "以沐浴精先建立香氣層次，讓可可與夜來香更柔順。"
+      },
+      {
+        id: "gin-bamboo-wash", category: "other", kind: "other", name: "琴酒醉上竹香水沐浴精",
+        image: "./assets/all-p10-53.png", family: "香水沐浴精", mood: [],
+        notes: { top: "150ml / 貨號 11900", middle: "琴酒醉上竹淡香精同系列", base: "適合喜歡清爽茶感、柑橘感的人" },
+        price: "優惠價 300 元", original: "推薦售價 350 元",
+        intro: "清透柑橘與竹葉茶感，適合早晨沐浴和通勤前使用。"
+      },
+      {
+        id: "pepper-peach-wash", category: "other", kind: "other", name: "胡椒撩上桃香水沐浴精",
+        image: "./assets/all-p11-56.png", family: "香水沐浴精", mood: [],
+        notes: { top: "150ml / 貨號 04183", middle: "胡椒撩上桃淡香精同系列", base: "適合活潑甜桃香氣的沐浴儀式" },
+        price: "優惠價 300 元", original: "推薦售價 350 元",
+        intro: "甜桃加粉紅胡椒的沐浴版，讓香氣從洗澡後就開始延伸。"
+      },
+      {
+        id: "pink-body-mist", category: "other", kind: "other", name: "粉紅心情身體噴霧香水",
+        image: "./assets/all-p13-61.png", family: "身體噴霧香水", mood: [],
+        notes: { top: "100ml / 貨號 04133", middle: "粉紅心情同花果木質調", base: "適合大面積、輕盈日常噴香" },
+        price: "優惠價 260 元", original: "推薦售價 300 元",
+        intro: "比淡香水更輕盈，適合運動後、出門前或想要清爽甜美感時使用。"
+      },
+      {
+        id: "cherish-hand-cream", category: "other", kind: "other", name: "恆久珍愛淡香精護手霜",
+        image: "./assets/all-p15-72.png", family: "護手霜", mood: [],
+        notes: { top: "30ml / 貨號 10396", middle: "恆久珍愛淡香精同系列", base: "適合辦公室、包包隨身保養" },
+        price: "優惠價 200 元", original: "推薦售價 240 元",
+        intro: "柔和花香調護手霜，補擦時能留下乾淨細緻的親膚香。"
+      }
+    ];
+
+    const categories = {
+      fresh: {
+        label: "花果清新",
+        subtitle: "明亮果香、綠意茶感、清爽花香，適合日常、通勤與年輕活力形象。"
+      },
+      floral: {
+        label: "柔美花香",
+        subtitle: "牡丹、玫瑰、橙花與麝香，適合溫柔、優雅、浪漫的第一印象。"
+      },
+      warm: {
+        label: "東方木質",
+        subtitle: "香草、琥珀、檀香與辛香調，適合夜晚、約會、成熟或高記憶點需求。"
+      },
+      other: {
+        label: "其他香氛",
+        subtitle: "香體乳、噴霧瓶、身體噴霧香水、香水沐浴精與護手霜，適合疊香、補香與日常保養。"
+      }
+    };
+
+    const questions = [
+      {
+        title: "今天這瓶香水主要想用在哪個場景？",
+        options: [
+          { label: "上班、拜訪客戶", desc: "希望乾淨、有專業感，不打擾別人。", tags: ["office", "classic"] },
+          { label: "約會、晚餐、派對", desc: "想留下明確記憶點，靠近時更迷人。", tags: ["date", "bold"] },
+          { label: "每天都能輕鬆使用", desc: "不挑衣服，出門前噴一下就好。", tags: ["daily", "fresh"] }
+        ]
+      },
+      {
+        title: "你希望別人怎麼形容這個味道？",
+        options: [
+          { label: "清新自然", desc: "像果香、茶感、綠意或乾淨空氣。", tags: ["fresh", "nature"] },
+          { label: "柔美浪漫", desc: "像花束、柔軟肌膚與溫柔靠近。", tags: ["romantic", "soft"] },
+          { label: "成熟有個性", desc: "有香草、木質、琥珀或辛香尾韻。", tags: ["warm", "elegant"] }
+        ]
+      },
+      {
+        title: "最吸引你的香調線索是？",
+        options: [
+          { label: "蜜桃、柑橘、莓果", desc: "明亮、有活力、比較容易入門。", tags: ["fresh", "young"] },
+          { label: "玫瑰、牡丹、茉莉", desc: "女人味、儀式感與細緻花香。", tags: ["romantic", "elegant"] },
+          { label: "香草、檀香、琥珀", desc: "溫暖、包覆感、尾韻更持久。", tags: ["warm", "classic"] }
+        ]
+      },
+      {
+        title: "你偏好的擴香感是？",
+        options: [
+          { label: "靠近才聞得到", desc: "低調、親膚、不希望太搶戲。", tags: ["soft", "office"] },
+          { label: "剛剛好被注意", desc: "日常可用，也有自己的存在感。", tags: ["daily", "elegant"] },
+          { label: "希望留下印象", desc: "場合感強，適合重點時刻。", tags: ["bold", "date"] }
+        ]
+      },
+      {
+        title: "如果用穿搭來形容，你最像哪一種？",
+        options: [
+          { label: "白襯衫與乾淨妝感", desc: "俐落、清爽、可信賴。", tags: ["office", "fresh"] },
+          { label: "洋裝與柔和光澤", desc: "細緻、浪漫、優雅。", tags: ["romantic", "elegant"] },
+          { label: "深色套裝或晚宴感", desc: "沉穩、成熟、有氣場。", tags: ["warm", "bold"] }
+        ]
+      }
+    ];
+
+    const state = { step: 0, answers: [], selected: null, resultIds: [] };
+
+    function productCard(product, rank) {
+      const rankHtml = rank ? `<span class="pill green">推薦 ${rank}</span>` : "";
+      const labels = product.kind === "other"
+        ? ["規格", "搭配", "使用情境"]
+        : ["前調", "中調", "基調"];
+      return `
+        <article class="card product">
+          <div class="product-media"><img src="${product.image}" alt="${product.name}"></div>
+          <div class="product-body">
+            <div class="tagline">
+              ${rankHtml}
+              <span class="pill">${product.family}</span>
+              <span class="pill blue">${product.price}</span>
+            </div>
+            <h3>${product.name}</h3>
+            <p class="small">${product.intro}</p>
+            <div class="notes">
+              <div>${labels[0]}：${product.notes.top}</div>
+              <div>${labels[1]}：${product.notes.middle}</div>
+              <div>${labels[2]}：${product.notes.base}</div>
+            </div>
+            <div class="price">${product.price}<span>${product.original}</span></div>
+          </div>
+        </article>`;
+    }
+
+    function renderCategory(key) {
+      const data = categories[key];
+      const list = products.filter(item => item.category === key);
+      document.getElementById(key).innerHTML = `
+        <div class="page-head">
+          <div class="eyebrow">Fragrance Wardrobe</div>
+          <h2>${data.label}</h2>
+          <p>${data.subtitle}</p>
+        </div>
+        <div class="product-grid">${list.map(item => productCard(item)).join("")}</div>`;
+    }
+
+    function renderQuiz() {
+      const root = document.getElementById("quiz");
+      if (state.resultIds.length) {
+        const recs = state.resultIds.map(id => products.find(p => p.id === id)).filter(Boolean);
+        root.innerHTML = `
+          <div class="page-head">
+            <div class="eyebrow">Your Scent Match</div>
+            <h2>你的專屬推薦</h2>
+            <p>依照剛剛的 5 題回答，系統挑出最符合情境、香調與擴香偏好的 2-3 款香水。</p>
+          </div>
+          <div class="result-summary">
+            <h3>${resultPersona()}</h3>
+            <p class="small">${resultCopy()}</p>
+          </div>
+          <div class="product-grid">${recs.map((item, index) => productCard(item, index + 1)).join("")}</div>
+          <div class="quiz-actions">
+            <button class="secondary" onclick="restartQuiz()">重新測驗</button>
+            <button class="primary" onclick="showTab('fresh')">瀏覽全部</button>
+          </div>`;
+        return;
+      }
+
+      const q = questions[state.step];
+      const percent = Math.round((state.step / questions.length) * 100);
+      root.innerHTML = `
+        <div class="page-head">
+          <div class="eyebrow">Fragrance Finder</div>
+          <h2>香氛顧問測驗</h2>
+          <p>用 5 個情境問題，快速找到最適合今天的 AVON 香水。</p>
+        </div>
+        <div class="quiz-card">
+          <div class="progress"><span style="width:${percent}%"></span></div>
+          <div class="question-count">QUESTION ${state.step + 1} / ${questions.length}</div>
+          <h2 class="question">${q.title}</h2>
+          <div class="options">
+            ${q.options.map((option, index) => `
+              <button class="option ${state.selected === index ? "selected" : ""}" onclick="selectOption(${index})">
+                <strong>${option.label}</strong>
+                <span>${option.desc}</span>
+              </button>`).join("")}
+          </div>
+          <div class="quiz-actions">
+            <button class="secondary" onclick="prevQuestion()" ${state.step === 0 ? "disabled" : ""}>上一題</button>
+            <button class="primary" onclick="nextQuestion()" ${state.selected === null ? "disabled" : ""}>${state.step === questions.length - 1 ? "看推薦" : "下一題"}</button>
+          </div>
+        </div>`;
+    }
+
+    function selectOption(index) {
+      state.selected = index;
+      renderQuiz();
+    }
+
+    function prevQuestion() {
+      if (state.step === 0) return;
+      state.step -= 1;
+      state.selected = state.answers[state.step] ?? null;
+      renderQuiz();
+    }
+
+    function nextQuestion() {
+      if (state.selected === null) return;
+      state.answers[state.step] = state.selected;
+      if (state.step < questions.length - 1) {
+        state.step += 1;
+        state.selected = state.answers[state.step] ?? null;
+        renderQuiz();
+        return;
+      }
+      state.resultIds = calculateResults();
+      renderQuiz();
+    }
+
+    function calculateResults() {
+      const fragranceProducts = products.filter(product => product.kind !== "other");
+      const scores = Object.fromEntries(fragranceProducts.map(p => [p.id, 0]));
+      state.answers.forEach((answer, questionIndex) => {
+        const tags = questions[questionIndex].options[answer].tags;
+        fragranceProducts.forEach(product => {
+          tags.forEach(tag => {
+            if (product.mood.includes(tag)) scores[product.id] += 3;
+            if (tag === "fresh" && product.category === "fresh") scores[product.id] += 1;
+            if (tag === "romantic" && product.category === "floral") scores[product.id] += 1;
+            if (tag === "warm" && product.category === "warm") scores[product.id] += 1;
+          });
+        });
+      });
+      return fragranceProducts
+        .slice()
+        .sort((a, b) => scores[b.id] - scores[a.id])
+        .slice(0, 3)
+        .map(item => item.id);
+    }
+
+    function resultPersona() {
+      const tags = state.answers.flatMap((answer, index) => questions[index].options[answer].tags);
+      const count = tag => tags.filter(item => item === tag).length;
+      if (count("warm") + count("bold") >= 3) return "高記憶點的東方木質型";
+      if (count("romantic") + count("elegant") >= 3) return "柔美優雅的花香型";
+      return "明亮自在的花果清新型";
+    }
+
+    function resultCopy() {
+      const title = resultPersona();
+      if (title.includes("東方")) return "你適合帶有香草、琥珀、檀香或辛香尾韻的香水，能在約會與重點場合留下更深印象。";
+      if (title.includes("花香")) return "你適合玫瑰、牡丹、橙花與麝香交織的香氣，氣質柔和但有細節。";
+      return "你適合果香、柑橘、茶感與乾淨木質，日常好穿，也能帶出清爽親和力。";
+    }
+
+    function restartQuiz() {
+      state.step = 0;
+      state.answers = [];
+      state.selected = null;
+      state.resultIds = [];
+      renderQuiz();
+    }
+
+    function showTab(id) {
+      document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+      document.querySelectorAll(".nav button").forEach(button => button.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      const navButton = document.querySelector(`.nav button[data-tab="${id}"]`);
+      if (navButton) navButton.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.querySelectorAll(".nav button").forEach(button => {
+      button.addEventListener("click", () => showTab(button.dataset.tab));
+    });
+    document.querySelectorAll("[data-tab-jump]").forEach(button => {
+      button.addEventListener("click", () => showTab(button.dataset.tabJump));
+    });
+
+    ["fresh", "floral", "warm", "other"].forEach(renderCategory);
+    renderQuiz();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>

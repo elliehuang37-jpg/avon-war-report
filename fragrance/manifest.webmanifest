@@ -1,0 +1,18 @@
+{
+  "name": "AVON Taiwan 香氛顧問",
+  "short_name": "AVON 香氛",
+  "description": "台灣雅芳香水分類瀏覽與香氛顧問測驗",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F7F1EC",
+  "theme_color": "#C8185A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./assets/pdf-p03-07.png",
+      "sizes": "457x431",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
