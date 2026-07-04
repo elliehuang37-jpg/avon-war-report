@@ -197,6 +197,25 @@
       font-size: 12px;
       text-decoration: line-through;
     }
+    .buy-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 40px;
+      margin-top: 11px;
+      border-radius: 8px;
+      background: var(--avon);
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(200,24,90,.18);
+    }
+    .buy-link:focus-visible {
+      outline: 3px solid rgba(181,136,42,.45);
+      outline-offset: 2px;
+    }
     .quiz-card {
       background: white;
       border: 1px solid var(--line);
@@ -360,6 +379,8 @@
   </div>
 
   <script>
+    const SHOP_BASE_URL = "https://shop.avon.com.tw/shop/product/classes?id=0414";
+
     const products = [
       {
         id: "little-black-dress", category: "floral", name: "經典黑色小洋裝香水",
@@ -622,48 +643,60 @@
 
     const questions = [
       {
-        title: "今天這瓶香水主要想用在哪個場景？",
+        title: "你今天想讓香氣幫你完成哪一件事？",
         options: [
-          { label: "上班、拜訪客戶", desc: "希望乾淨、有專業感，不打擾別人。", tags: ["office", "classic"] },
-          { label: "約會、晚餐、派對", desc: "想留下明確記憶點，靠近時更迷人。", tags: ["date", "bold"] },
-          { label: "每天都能輕鬆使用", desc: "不挑衣服，出門前噴一下就好。", tags: ["daily", "fresh"] }
+          { label: "讓工作狀態更俐落", desc: "希望聞起來乾淨、專業、讓人放心。", tags: ["office", "classic"] },
+          { label: "讓自己被溫柔記住", desc: "想在約會、聚餐或重要見面留下好感。", tags: ["date", "romantic"] },
+          { label: "讓日常心情亮起來", desc: "出門前一噴，就像替自己切換好心情。", tags: ["daily", "fresh"] }
         ]
       },
       {
-        title: "你希望別人怎麼形容這個味道？",
+        title: "朋友最常說你給人的第一印象是？",
         options: [
-          { label: "清新自然", desc: "像果香、茶感、綠意或乾淨空氣。", tags: ["fresh", "nature"] },
-          { label: "柔美浪漫", desc: "像花束、柔軟肌膚與溫柔靠近。", tags: ["romantic", "soft"] },
-          { label: "成熟有個性", desc: "有香草、木質、琥珀或辛香尾韻。", tags: ["warm", "elegant"] }
+          { label: "清爽自然，很好親近", desc: "不刻意，但靠近時很舒服。", tags: ["fresh", "nature"] },
+          { label: "溫柔細膩，有女人味", desc: "柔和、有質感，細節會被注意到。", tags: ["romantic", "soft"] },
+          { label: "有主見，氣場很明確", desc: "不怕被看見，喜歡有記憶點的風格。", tags: ["warm", "bold"] }
         ]
       },
       {
-        title: "最吸引你的香調線索是？",
+        title: "如果這瓶香水是一套穿搭，你會選？",
         options: [
-          { label: "蜜桃、柑橘、莓果", desc: "明亮、有活力、比較容易入門。", tags: ["fresh", "young"] },
-          { label: "玫瑰、牡丹、茉莉", desc: "女人味、儀式感與細緻花香。", tags: ["romantic", "elegant"] },
-          { label: "香草、檀香、琥珀", desc: "溫暖、包覆感、尾韻更持久。", tags: ["warm", "classic"] }
+          { label: "白襯衫、牛仔褲、乾淨妝感", desc: "簡單明亮，適合天天穿。", tags: ["office", "fresh"] },
+          { label: "柔光洋裝、珍珠耳環、淡妝", desc: "細緻浪漫，帶一點優雅儀式感。", tags: ["romantic", "elegant"] },
+          { label: "深色套裝、紅唇或晚宴感", desc: "成熟、有氣勢，走進場就有存在感。", tags: ["warm", "bold"] }
         ]
       },
       {
-        title: "你偏好的擴香感是？",
+        title: "你最想在香氣裡聞到哪一種情緒？",
         options: [
-          { label: "靠近才聞得到", desc: "低調、親膚、不希望太搶戲。", tags: ["soft", "office"] },
-          { label: "剛剛好被注意", desc: "日常可用，也有自己的存在感。", tags: ["daily", "elegant"] },
-          { label: "希望留下印象", desc: "場合感強，適合重點時刻。", tags: ["bold", "date"] }
+          { label: "剛洗完澡的清透感", desc: "柑橘、茶感、綠意或清爽果香。", tags: ["fresh", "nature"] },
+          { label: "像花束貼近肌膚", desc: "玫瑰、牡丹、茉莉與柔軟麝香。", tags: ["romantic", "soft"] },
+          { label: "像夜晚燈光下的溫度", desc: "香草、琥珀、檀香、辛香或木質尾韻。", tags: ["warm", "classic"] }
         ]
       },
       {
-        title: "如果用穿搭來形容，你最像哪一種？",
+        title: "你希望香味被注意到的方式是？",
         options: [
-          { label: "白襯衫與乾淨妝感", desc: "俐落、清爽、可信賴。", tags: ["office", "fresh"] },
-          { label: "洋裝與柔和光澤", desc: "細緻、浪漫、優雅。", tags: ["romantic", "elegant"] },
-          { label: "深色套裝或晚宴感", desc: "沉穩、成熟、有氣場。", tags: ["warm", "bold"] }
+          { label: "只有靠近的人才聞得到", desc: "低調親膚，不想打擾別人。", tags: ["soft", "office"] },
+          { label: "經過時有淡淡存在感", desc: "日常好穿，但仍有自己的風格。", tags: ["daily", "elegant"] },
+          { label: "一出現就讓人印象深刻", desc: "場合感強，適合重要時刻。", tags: ["bold", "date"] }
+        ]
+      },
+      {
+        title: "這次選香水最像哪一種購買情境？",
+        options: [
+          { label: "我要一瓶不失手的日常香", desc: "上班、通勤、見朋友都能用。", tags: ["daily", "fresh"] },
+          { label: "我要送給溫柔有品味的人", desc: "希望安全、精緻、收到會開心。", tags: ["romantic", "elegant"] },
+          { label: "我要一瓶轉換氣場的香", desc: "重要約會、聚會、拍照或想犒賞自己。", tags: ["warm", "bold"] }
         ]
       }
     ];
 
     const state = { step: 0, answers: [], selected: null, resultIds: [] };
+
+    function productBuyUrl(product) {
+      return product.buyUrl || SHOP_BASE_URL;
+    }
 
     function productCard(product, rank) {
       const rankHtml = rank ? `<span class="pill green">推薦 ${rank}</span>` : "";
@@ -687,6 +720,7 @@
               <div>${labels[2]}：${product.notes.base}</div>
             </div>
             <div class="price">${product.price}<span>${product.original}</span></div>
+            <a class="buy-link" href="${productBuyUrl(product)}" target="_blank" rel="noopener">前往美麗線上購</a>
           </div>
         </article>`;
     }
@@ -711,7 +745,7 @@
           <div class="page-head">
             <div class="eyebrow">Your Scent Match</div>
             <h2>你的專屬推薦</h2>
-            <p>依照剛剛的 5 題回答，系統挑出最符合情境、香調與擴香偏好的 2-3 款香水。</p>
+            <p>依照剛剛的 6 題回答，系統挑出最符合個性、情境、香調與擴香偏好的 2-3 款香水。</p>
           </div>
           <div class="result-summary">
             <h3>${resultPersona()}</h3>
@@ -731,7 +765,7 @@
         <div class="page-head">
           <div class="eyebrow">Fragrance Finder</div>
           <h2>香氛顧問測驗</h2>
-          <p>用 5 個情境問題，快速找到最適合今天的 AVON 香水。</p>
+          <p>用 6 個更個人化的情境問題，快速找到最適合今天的 AVON 香水。</p>
         </div>
         <div class="quiz-card">
           <div class="progress"><span style="width:${percent}%"></span></div>
