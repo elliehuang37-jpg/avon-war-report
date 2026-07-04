@@ -334,16 +334,22 @@
     }
     .bottom-cta button {
       pointer-events: auto;
-      border: 0;
+      border: 1px solid transparent;
       border-radius: 8px;
       padding: 12px 10px;
-      color: white;
       font-weight: 800;
-      box-shadow: 0 10px 22px rgba(93,23,61,.22);
+      box-shadow: 0 10px 22px rgba(93,23,61,.16);
       cursor: pointer;
     }
-    .bottom-cta .quiz-jump { background: var(--plum); }
-    .bottom-cta .result-jump { background: var(--green); }
+    .bottom-cta .quiz-jump {
+      background: linear-gradient(135deg, var(--avon), #a91550);
+      color: white;
+    }
+    .bottom-cta .result-jump {
+      background: #fff4f7;
+      border-color: rgba(181,136,42,.46);
+      color: var(--plum);
+    }
     @media (min-width: 470px) {
       .page { padding-left: 18px; padding-right: 18px; }
       .product { grid-template-columns: 132px 1fr; }
